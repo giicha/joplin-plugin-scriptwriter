@@ -1,0 +1,73 @@
+/* Базовый контейнер редактора в режиме сценария */
+.cm-fountain-active .cm-content {
+  font-family: 'Courier Prime', 'Courier New', Courier, monospace !important;
+  font-size: 15px !important;
+  line-height: 1.45 !important;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 32px !important;
+}
+
+/* Заголовок сцены */
+.cm-fountain-scene {
+  font-weight: bold !important;
+  text-transform: uppercase;
+  padding-top: 12px !important;
+  color: var(--joplin-color, #111);
+}
+
+/* Персонаж */
+.cm-fountain-character {
+  font-weight: bold !important;
+  text-transform: uppercase;
+  padding-left: 34% !important;
+  padding-top: 10px !important;
+}
+
+/* Ремарка */
+.cm-fountain-parenthetical {
+  padding-left: 27% !important;
+  padding-right: 25% !important;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* Реплика */
+.cm-fountain-dialogue {
+  padding-left: 17% !important;
+  padding-right: 17% !important;
+}
+
+/* Переход */
+.cm-fountain-transition {
+  text-align: right !important;
+  text-transform: uppercase;
+  font-weight: bold;
+  padding-top: 8px !important;
+}
+
+/* Центрированный текст */
+.cm-fountain-centered {
+  text-align: center !important;
+}
+
+/* Секции и синопсисы */
+.cm-fountain-section {
+  color: #2b6cb0 !important;
+  font-weight: bold;
+  font-size: 1.15em;
+  padding-top: 14px !important;
+}
+
+.cm-fountain-synopsis {
+  color: #718096 !important;
+  font-style: italic;
+  padding-left: 16px !important;
+  border-left: 2px solid #cbd5e0;
+}
+
+/* Блок метаданных в шапке */
+.cm-fountain-metadata {
+  color: #718096 !important;
+  font-size: 0.9em;
+}

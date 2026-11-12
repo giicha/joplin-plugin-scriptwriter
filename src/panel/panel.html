@@ -1,0 +1,123 @@
+<style>
+  #fountain-app {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    padding: 10px;
+    color: var(--joplin-color);
+    background-color: var(--joplin-background-color);
+  }
+  .f-hidden { display: none !important; }
+  .f-banner {
+    text-align: center;
+    padding: 20px 10px;
+    border: 1px dashed var(--joplin-divider-color, #ccc);
+    border-radius: 6px;
+  }
+  .f-btn {
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--joplin-divider-color, #888);
+    background: var(--joplin-background-color3, transparent);
+    color: var(--joplin-color);
+  }
+  .f-btn:hover { opacity: 0.85; }
+  .f-stats-card {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+    border-radius: 6px;
+    background: rgba(128, 128, 128, 0.12);
+    margin-bottom: 12px;
+  }
+  .f-stat-item { display: flex; flex-direction: column; align-items: center; }
+  .f-stat-label { font-size: 11px; opacity: 0.75; }
+  .f-stat-value { font-size: 16px; font-weight: bold; margin-top: 2px; }
+  .f-stat-divider { width: 1px; height: 28px; background: rgba(128, 128, 128, 0.3); }
+  .f-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+    margin-bottom: 8px;
+  }
+  .f-tab-btn {
+    flex: 1;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    padding: 6px 4px;
+    font-size: 12px;
+  }
+  .f-tab-btn.active {
+    border-bottom-color: #2b6cb0;
+    font-weight: bold;
+  }
+  .f-tab-content { display: none; }
+  .f-tab-content.active { display: block; }
+  .f-toolbar-row { margin-bottom: 8px; font-size: 12px; }
+  .f-list { list-style: none; padding: 0; margin: 0; }
+  .f-nav-item {
+    padding: 5px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.35;
+  }
+  .f-nav-item:hover { background: rgba(128, 128, 128, 0.15); }
+  .f-nav-section { font-weight: bold; color: #3182ce; margin-top: 6px; }
+  .f-nav-scene { padding-left: 10px; }
+  .f-nav-synopsis { padding-left: 20px; font-style: italic; opacity: 0.75; font-size: 12px; }
+  .f-entity-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 6px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+  }
+  .f-empty-msg { opacity: 0.6; font-size: 12px; padding: 8px 4px; }
+</style>
+
+<div id="fountain-app">
+  <div id="f-inactive-banner" class="f-banner">
+    <p>Режим сценария для этой заметки выключен.</p>
+    <button id="f-btn-activate" class="f-btn">Включить режим Fountain</button>
+  </div>
+
+  <div id="f-active-content" class="f-hidden">
+    <div class="f-stats-card">
+      <div class="f-stat-item">
+        <span class="f-stat-label">Страниц</span>
+        <span id="f-stat-pages" class="f-stat-value">~0</span>
+      </div>
+      <div class="f-stat-divider"></div>
+      <div class="f-stat-item">
+        <span class="f-stat-label">Хронометраж</span>
+        <span id="f-stat-time" class="f-stat-value">~0 мин</span>
+      </div>
+    </div>
+
+    <div class="f-tabs">
+      <button class="f-tab-btn active" data-tab="outline">Структура</button>
+      <button class="f-tab-btn" data-tab="characters">Персонажи</button>
+      <button class="f-tab-btn" data-tab="locations">Локации</button>
+    </div>
+
+    <div id="f-tab-outline" class="f-tab-content active">
+      <div class="f-toolbar-row">
+        <label>
+          <input type="checkbox" id="f-toggle-synopses" checked />
+          Показывать синопсисы (=)
+        </label>
+      </div>
+      <ul id="f-outline-list" class="f-list"></ul>
+    </div>
+
+    <div id="f-tab-characters" class="f-tab-content">
+      <ul id="f-characters-list" class="f-list"></ul>
+    </div>
+
+    <div id="f-tab-locations" class="f-tab-content">
+      <ul id="f-locations-list" class="f-list"></ul>
+    </div>
+  </div>
+</div>
