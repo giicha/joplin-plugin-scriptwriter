@@ -160,6 +160,20 @@ joplin.plugins.register({
       './codemirror/fountainPlugin.js'
     );
 
+        await joplin.contentScripts.onMessage('fountainCodeMirror', async (message: any) => {
+      if (message && message.type === 'requestState') {
+        const note = await joplin.workspace.selectedNote();
+        if (!note) return { enabled: false };
+        const enabled = await noteHasTag(note.id, FOUNTAIN_TAG);
+        const localesRaw = (await joplin.settings.value('activeLocales')) as string;
+        const locales = localesRaw.split(',').map((s) => s.trim()).filter(Boolean);
+        const dictionary = enabled
+          ? await collectNotebookDictionary(note.parent_id, note.id, locales)
+          : { characters: [], locations: [], locales };
+        return { enabled, dictionary };
+      }
+    });
+
     const panel = await joplin.views.panels.create('fountainOutlinePanel');
     const fs = require('fs');
     const path = require('path');
@@ -182,10 +196,16 @@ joplin.plugins.register({
         ? await collectNotebookDictionary(note.parent_id, note.id, locales)
         : { characters: [], locations: [], locales };
 
-      await joplin.commands.execute('editor.execCommand', {
-        name: 'fountain:setState',
-        args: [{ enabled, dictionary }],
-      });
+      // Отправляем состояние в CodeMirror с небольшой задержкой,
+      // чтобы новый экземпляр редактора успел смонтироваться при смене заметки
+        try {
+          await joplin.commands.execute('editor.execCommand', {
+            name: 'fountain:setState',
+            args: [{ enabled, dictionary }],
+          });
+        } catch (_e) {
+          // Игнорируем, если редактор в данный момент пересоздается
+        }
 
       if (enabled) {
         await joplin.views.panels.show(panel);

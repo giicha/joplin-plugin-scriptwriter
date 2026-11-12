@@ -6,7 +6,7 @@ import {
   ViewUpdate,
   keymap,
 } from '@codemirror/view';
-import { Prec, RangeSetBuilder } from '@codemirror/state';
+import { Prec, RangeSetBuilder, StateEffect } from '@codemirror/state';
 import { autocompletion } from '@codemirror/autocomplete';
 import { analyzeFountain, BlockType } from '../fountainParser';
 import { fountainKeymap } from './keymap';
@@ -30,6 +30,9 @@ let externalDict: ExternalDictionary = {
   locations: [],
   locales: ['en'],
 };
+
+// Специальный эффект для принудительного пересчета декораций при смене режима/заметки
+const refreshFountainEffect = StateEffect.define<boolean>();
 
 function buildDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
@@ -62,7 +65,10 @@ const fountainViewPlugin = ViewPlugin.fromClass(
     }
     update(update: ViewUpdate) {
       this.syncRootClass(update.view);
-      if (update.docChanged || update.viewportChanged) {
+      const hasRefreshEffect = update.transactions.some((tr) =>
+        tr.effects.some((e) => e.is(refreshFountainEffect))
+      );
+      if (update.docChanged || update.viewportChanged || hasRefreshEffect) {
         this.decorations = buildDecorations(update.view);
       }
     }
@@ -82,15 +88,22 @@ const fountainViewPlugin = ViewPlugin.fromClass(
 export default function (context: { contentScriptId: string; postMessage: (msg: any) => Promise<any> }) {
   return {
     plugin: (editorControl: any) => {
-      // Слушаем команды от главного процесса Joplin (включение/выключение режима, обновление словаря, прокрутка)
+      const applyState = (payload: any) => {
+        if (!payload) return;
+        isFountainEnabled = !!payload.enabled;
+        if (payload.dictionary) {
+          externalDict = payload.dictionary;
+        }
+        if (editorControl.editor) {
+          editorControl.editor.dispatch({
+            effects: refreshFountainEffect.of(isFountainEnabled),
+          });
+        }
+      };
+
       if (editorControl.registerCommand) {
         editorControl.registerCommand('fountain:setState', (payload: any) => {
-          isFountainEnabled = !!payload.enabled;
-          if (payload.dictionary) {
-            externalDict = payload.dictionary;
-          }
-          // Принудительно обновляем вид редактора
-          editorControl.editor.dispatch({});
+          applyState(payload);
         });
 
         editorControl.registerCommand('fountain:scrollToLine', (lineNumber: number) => {
@@ -123,6 +136,10 @@ export default function (context: { contentScriptId: string; postMessage: (msg: 
           ],
         }),
       ]);
+
+      context.postMessage({ type: 'requestState' }).then((state) => {
+        applyState(state);
+      }).catch(() => {});
     },
     assets: () => [{ name: 'fountain.css' }],
   };
