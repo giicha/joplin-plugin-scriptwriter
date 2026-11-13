@@ -23,6 +23,7 @@ const LINE_CLASSES: Partial<Record<BlockType, string>> = {
   section: 'cm-fountain-section',
   synopsis: 'cm-fountain-synopsis',
   metadata: 'cm-fountain-metadata',
+  boneyard: 'cm-fountain-boneyard',
 };
 
 function buildDecorations(view: EditorView): DecorationSet {
@@ -30,17 +31,46 @@ function buildDecorations(view: EditorView): DecorationSet {
   const { enabled, analysis, forcedDialogueLine } = view.state.field(fountainStateField);
   if (!enabled) return builder.finish();
 
+  const inlineRegex = /(\[\[[\s\S]*?\]\]|\*\*[^*]+\*\*|\*[^*]+\*|_[^_]+_)/g;
+
   for (const parsed of analysis.lines) {
     const effectiveType =
       parsed.lineNumber === forcedDialogueLine ? 'dialogue' : parsed.type;
     const cssClass = LINE_CLASSES[effectiveType];
-    if (cssClass && parsed.lineNumber <= view.state.doc.lines) {
+
+    if (parsed.lineNumber <= view.state.doc.lines) {
       const lineInfo = view.state.doc.line(parsed.lineNumber);
-      builder.add(
-        lineInfo.from,
-        lineInfo.from,
-        Decoration.line({ attributes: { class: cssClass } })
-      );
+      if (cssClass) {
+        builder.add(
+          lineInfo.from,
+          lineInfo.from,
+          Decoration.line({ attributes: { class: cssClass } })
+        );
+      }
+
+      // Highlight inline notes [[...]], **bold**, *italic*, _underline_
+      inlineRegex.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = inlineRegex.exec(lineInfo.text)) !== null) {
+        const token = match[0];
+        const from = lineInfo.from + match.index;
+        const to = from + token.length;
+        let markClass = '';
+
+        if (token.startsWith('[[')) {
+          markClass = 'cm-fountain-inline-note';
+        } else if (token.startsWith('**')) {
+          markClass = 'cm-fountain-bold';
+        } else if (token.startsWith('*')) {
+          markClass = 'cm-fountain-italic';
+        } else if (token.startsWith('_')) {
+          markClass = 'cm-fountain-underline';
+        }
+
+        if (markClass) {
+          builder.add(from, to, Decoration.mark({ class: markClass }));
+        }
+      }
     }
   }
 

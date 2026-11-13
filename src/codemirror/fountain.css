@@ -71,3 +71,33 @@
   color: #718096 !important;
   font-size: 0.9em;
 }
+
+.cm-fountain-active .cm-fountain-boneyard {
+  color: #888;
+  opacity: 0.55;
+  font-style: italic;
+}
+
+.cm-fountain-inline-note {
+  background-color: rgba(255, 213, 79, 0.22);
+  color: #b7791f;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+
+.cm-fountain-bold {
+  font-weight: bold;
+}
+
+.cm-fountain-italic {
+  font-style: italic;
+}
+
+.cm-fountain-underline {
+  text-decoration: underline;
+}
+
+.cm-fountain-dual-badge {
+  color: #3182ce;
+  font-weight: bold;
+}

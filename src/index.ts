@@ -196,6 +196,18 @@ joplin.plugins.register({
         public: true,
         label: 'Scene marker languages (comma-separated: en, fr, es, it, de, ru, uk)',
       },
+      defaultPaperSize: {
+        value: 0,
+        type: SettingItemType.Int,
+        section: 'fountainArchitect',
+        isEnum: true,
+        options: {
+          0: 'US Letter (8.5" × 11")',
+          1: 'A4 (210 × 297 mm)',
+        },
+        public: true,
+        label: 'Default PDF paper size',
+      },
     });
 
     await joplin.contentScripts.register(
@@ -362,6 +374,7 @@ joplin.plugins.register({
 
         const defaultAuthor = (await joplin.settings.value('defaultAuthor')) as string;
         const defaultContact = (await joplin.settings.value('defaultContact')) as string;
+        const defaultPaperSize = (await joplin.settings.value('defaultPaperSize')) as number;
         const today = new Date().toLocaleDateString('en-US');
 
         const title = escapeHtml(analysis.metadata['title'] || item.title || 'UNTITLED');
@@ -453,6 +466,13 @@ joplin.plugins.register({
           <div class="f-dlg">
             <h3>Export Screenplay to PDF</h3>
             <form name="exportForm">
+              <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+               <label style="font-weight: bold;">Paper Size:</label>
+                <select name="paperSize" style="width: 60%; padding: 4px;">
+                 <option value="LETTER" ${defaultPaperSize === 0 ? 'selected' : ''}>US Letter (8.5" × 11")</option>
+                 <option value="A4" ${defaultPaperSize === 1 ? 'selected' : ''}>A4 (210 × 297 mm)</option>
+                </select>
+              </div>
               <div class="f-dlg-checks">
                 <label>
                   <input type="checkbox" name="printTitlePage" checked />
@@ -504,7 +524,7 @@ joplin.plugins.register({
           `
         );
 
-        await joplin.views.dialogs.setButtons(exportDialog, [
+                await joplin.views.dialogs.setButtons(exportDialog, [
           { id: 'ok', title: 'Export PDF' },
           { id: 'cancel', title: 'Cancel' },
         ]);
@@ -514,6 +534,7 @@ joplin.plugins.register({
 
         const form = result.formData?.exportForm || {};
         const exportOpts: PdfExportOptions = {
+          paperSize: form.paperSize === 'A4' ? 'A4' : 'LETTER',
           printTitlePage: form.printTitlePage === 'on',
           numberScenes: form.numberScenes === 'on',
           includeSynopses: form.includeSynopses === 'on',
