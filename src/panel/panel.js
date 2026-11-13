@@ -97,12 +97,23 @@ function renderData(data) {
     locList.innerHTML = '';
     const locs = data.locations || [];
     if (locs.length === 0) {
-      locList.innerHTML = '<li class="f-empty-msg">No locations found yet</li>';
+      const emptyLi = document.createElement('li');
+      emptyLi.className = 'f-empty-msg';
+      emptyLi.textContent = 'No locations found yet';
+      locList.appendChild(emptyLi);
     } else {
-      for (const loc of locs) {
+      for (const [loc, count] of locs) {
         const li = document.createElement('li');
         li.className = 'f-entity-item';
-        li.textContent = loc;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = loc;
+
+        const countSpan = document.createElement('span');
+        countSpan.textContent = count === 1 ? '1 scene' : `${count} scenes`;
+
+        li.appendChild(nameSpan);
+        li.appendChild(countSpan);
         locList.appendChild(li);
       }
     }

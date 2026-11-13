@@ -78,7 +78,7 @@ async function collectNotebookDictionary(folderId: string, excludeNoteId: string
 
     const analysis = analyzeFountain(note.body || '', locales);
     analysis.characters.forEach((_, char) => characters.add(char));
-    analysis.locations.forEach((loc) => locations.add(loc));
+    analysis.locations.forEach((_, loc) => locations.add(loc));
   }
 
   const bibleNotes = await getNotesByTag(BIBLE_TAG);
@@ -234,15 +234,15 @@ joplin.plugins.register({
 
     const updateSidePanel = async (noteBody: string, locales: string[]) => {
       const analysis = analyzeFountain(noteBody, locales);
-      await joplin.views.panels.postMessage(panel, {
+            await joplin.views.panels.postMessage(panel, {
         type: 'update',
         payload: {
           enabled: true,
           estimatedPages: analysis.estimatedPages,
           estimatedMinutes: analysis.estimatedMinutes,
           outline: analysis.outline,
-          characters: Array.from(analysis.characters.entries()),
-          locations: Array.from(analysis.locations),
+          characters: Array.from(analysis.characters.entries()).sort((a, b) => b[1] - a[1]),
+          locations: Array.from(analysis.locations.entries()).sort((a, b) => b[1] - a[1]),
         },
       });
     };

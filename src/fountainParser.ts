@@ -32,8 +32,8 @@ export interface OutlineNode {
 export interface ScreenplayAnalysis {
   lines: ParsedLine[];
   metadata: Record<string, string>;
-  characters: Map<string, number>; // Name -> dialogue count
-  locations: Set<string>;
+  characters: Map<string, number>;
+  locations: Map<string, number>;
   outline: OutlineNode[];
   estimatedPages: number;
   estimatedMinutes: number;
@@ -45,7 +45,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
   const parsedLines: ParsedLine[] = [];
   const metadata: Record<string, string> = {};
   const characters = new Map<string, number>();
-  const locations = new Set<string>();
+  const locations = new Map<string, number>();
   const outline: OutlineNode[] = [];
 
   let inMetadata = true;
@@ -142,7 +142,9 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       // Extract location name (without prefix and time of day after " - ")
       const withoutPrefix = cleanHeading.replace(sceneRegex, '');
       const locName = (withoutPrefix.split(/\s+-\s+/).at(0) || '').trim().toUpperCase();
-      if (locName) locations.add(locName);
+      if (locName) {
+        locations.set(locName, (locations.get(locName) || 0) + 1);
+      }
       continue;
     }
 

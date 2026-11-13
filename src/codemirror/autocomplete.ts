@@ -48,7 +48,7 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
   const locMatch = textBefore.match(new RegExp(`^(${prefixList})\\s+([^-]*)$`, 'i'));
   if (locMatch) {
     const allLocs = new Set<string>([
-      ...docAnalysis.locations,
+      ...docAnalysis.locations.keys(),
       ...extDict.locations,
     ]);
     const matchedPrefix = locMatch.at(1) || '';
