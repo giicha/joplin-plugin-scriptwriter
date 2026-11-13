@@ -2,7 +2,7 @@
 	"manifest_version": 1,
 	"id": "com.giicha.joplin-plugin-scriptwriter",
 	"app_min_version": "3.7",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"name": "Scriptwriter",
 	"description": "Screenwriting mode for Fountain format with Tab/Enter workflow, outline panel, and PDF export",
 	"author": "giicha",

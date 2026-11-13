@@ -24,36 +24,63 @@ async function noteHasTag(noteId: string, tagTitle: string): Promise<boolean> {
   return tags.items.some((t: any) => t.title.toLowerCase() === tagTitle.toLowerCase());
 }
 
+async function getNotesByTag(tagTitle: string): Promise<any[]> {
+  let page = 1;
+  let tagId: string | null = null;
+
+  while (true) {
+    const res = await joplin.data.get(['tags'], { page });
+    const found = res.items.find((t: any) => t.title.toLowerCase() === tagTitle.toLowerCase());
+    if (found) {
+      tagId = found.id;
+      break;
+    }
+    if (!res.has_more) break;
+    page++;
+  }
+
+  if (!tagId) return [];
+
+  const result: any[] = [];
+  page = 1;
+  while (true) {
+    const notesRes = await joplin.data.get(['tags', tagId, 'notes'], {
+      fields: ['id', 'parent_id', 'title', 'body'],
+      page,
+    });
+    result.push(...notesRes.items);
+    if (!notesRes.has_more) break;
+    page++;
+  }
+  return result;
+}
+
 async function collectNotebookDictionary(folderId: string, excludeNoteId: string, locales: string[]) {
   const characters = new Set<string>();
   const locations = new Set<string>();
 
-  let page = 1;
-  while (true) {
-    const notesRes = await joplin.data.get(['folders', folderId, 'notes'], {
-      fields: ['id', 'title', 'body'],
-      page,
+  const scriptNotes = await getNotesByTag(FOUNTAIN_TAG);
+  for (const stub of scriptNotes) {
+    if (stub.id === excludeNoteId) continue;
+    const note = await joplin.data.get(['notes', stub.id], {
+      fields: ['id', 'parent_id', 'body'],
     });
+    if (note.parent_id !== folderId) continue;
 
-    for (const note of notesRes.items) {
-      if (note.id === excludeNoteId) continue;
+    const analysis = analyzeFountain(note.body || '', locales);
+    analysis.characters.forEach((_, char) => characters.add(char));
+    analysis.locations.forEach((loc) => locations.add(loc));
+  }
 
-      const isScript = await noteHasTag(note.id, FOUNTAIN_TAG);
-      const isBible = await noteHasTag(note.id, BIBLE_TAG);
+  const bibleNotes = await getNotesByTag(BIBLE_TAG);
+  for (const stub of bibleNotes) {
+    if (stub.id === excludeNoteId) continue;
+    const note = await joplin.data.get(['notes', stub.id], {
+      fields: ['id', 'parent_id', 'body'],
+    });
+    if (note.parent_id !== folderId) continue;
 
-      if (isScript) {
-        const analysis = analyzeFountain(note.body || '', locales);
-        analysis.characters.forEach((_, char) => characters.add(char));
-        analysis.locations.forEach((loc) => locations.add(loc));
-      }
-
-      if (isBible) {
-        parseBibleNote(note.body || '', characters, locations);
-      }
-    }
-
-    if (!notesRes.has_more) break;
-    page++;
+    parseBibleNote(note.body || '', characters, locations);
   }
 
   return {
@@ -69,25 +96,33 @@ function parseBibleNote(body: string, characters: Set<string>, locations: Set<st
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (/^##\s+(Characters|Персонажи)/i.test(trimmed)) {
+    if (!trimmed) continue;
+
+    // Определяем заголовок секции (# Characters, ## Characters, ### Персонажи и т.д.)
+    if (/^#{1,6}\s*(Characters|Персонажи)\b/i.test(trimmed)) {
       currentSection = 'chars';
       continue;
     }
-    if (/^##\s+(Locations|Локации)/i.test(trimmed)) {
+    if (/^#{1,6}\s*(Locations|Локации)\b/i.test(trimmed)) {
       currentSection = 'locs';
       continue;
     }
-    if (/^##\s+/.test(trimmed)) {
+    if (/^#{1,6}\s+/.test(trimmed)) {
       currentSection = null;
       continue;
     }
 
-    const itemMatch = trimmed.match(/^[-*]\s+(.+)$/);
-    if (itemMatch && currentSection) {
-      const value = itemMatch[1].replace(/\s*\(.*?\)\s*$/, '').trim().toUpperCase();
-      if (value) {
-        if (currentSection === 'chars') characters.add(value);
-        if (currentSection === 'locs') locations.add(value);
+    // Если мы внутри секции — принимаем пункты списка (-, *, +, 1.) или обычные строки
+    if (currentSection) {
+      const cleaned = trimmed
+        .replace(/^([-*+]|\d+\.)\s+/, '') // убираем маркер списка, если он есть
+        .replace(/\s*\(.*?\)\s*$/, '')    // убираем пояснение в скобках в конце
+        .trim()
+        .toUpperCase();
+
+      if (cleaned) {
+        if (currentSection === 'chars') characters.add(cleaned);
+        if (currentSection === 'locs') locations.add(cleaned);
       }
     }
   }

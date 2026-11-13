@@ -62,6 +62,23 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
+      // Switch INT. -> EXT. -> INT./EXT. -> INT. in an existing scene heading on Tab
+      if (currentType === 'scene_heading') {
+        let nextLine = trimmed;
+        if (/^INT\.\s+/i.test(trimmed)) {
+          nextLine = trimmed.replace(/^INT\.\s+/i, 'EXT. ');
+        } else if (/^EXT\.\s+/i.test(trimmed)) {
+          nextLine = trimmed.replace(/^EXT\.\s+/i, 'INT./EXT. ');
+        } else if (/^INT\.\/EXT\.\s+/i.test(trimmed)) {
+          nextLine = trimmed.replace(/^INT\.\/EXT\.\s+/i, 'INT. ');
+        }
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: nextLine },
+          selection: EditorSelection.cursor(line.from + nextLine.length),
+        });
+        return true;
+      }
+
       // 2. From filled Character -> Parenthetical ()
       if (currentType === 'character' || trimmed.startsWith('@')) {
         const cleanChar = trimmed.replace(/^@/, '').toUpperCase();

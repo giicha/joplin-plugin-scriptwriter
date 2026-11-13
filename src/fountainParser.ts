@@ -54,7 +54,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
   const prefixPattern = localeCfg.scenePrefixes
     .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|');
-  const sceneRegex = new RegExp(`^(${prefixPattern})\\s+`, 'i');
+  const sceneRegex = new RegExp(`^(${prefixPattern})(\\s+|$)`, 'i');
 
   for (let i = 0; i < rawLines.length; i++) {
     const line = rawLines[i];
