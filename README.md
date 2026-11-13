@@ -96,7 +96,7 @@ Go to **Options / Settings → Fountain Screenplay** to configure:
 
 ## License
 
-MIT
+This repository is distributed under the terms of the **MIT License**. You are free to copy, modify, distribute, or use this extension setup commercially, provided the original author credits remain intact. See the `LICENSE` file for details.
 
 <div align="center">
 
