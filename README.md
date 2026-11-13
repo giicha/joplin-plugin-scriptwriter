@@ -54,7 +54,7 @@ A screenwriting plugin for **Joplin** built around the plain-text [Fountain](htt
 1. Launch **Joplin** on your desktop.
 2. Navigate to your global configuration window: `Tools` > `Options` (or `Joplin` > `Preferences` on macOS).
 3. Select the **Plugins** segment tab from the sidebar interface.
-4. Type **`Checkbox Sum`** directly inside the search inputs field bar.
+4. Type **`scriptwriter`** directly inside the search inputs field bar.
 5. Click **Install**, then gently restart the Joplin application bootstrap to activate the panel layout.
 
 ### Method 2: From Release (`.jpl`)
