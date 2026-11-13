@@ -22,24 +22,28 @@ A screenwriting plugin for **Joplin** built around the plain-text [Fountain](htt
 ## Features
 
 - **100% Pure Fountain Storage:** Your notes stay clean, valid Fountain plain text without proprietary XML or hidden markup. Visual indentation and typography are applied dynamically inside the CodeMirror 6 Markdown editor.
-- **Per-Note Screenplay Mode:** Toggle screenplay mode for any note with a single click on the **filmstrip icon** in the editor toolbar (managed cleanly via the `fountain` tag).
+- **Per-Note Screenplay Mode:** Toggle screenplay mode for any note with a single click on the **filmstrip icon** on the toolbar or via the side panel button (managed cleanly via the `fountain` tag).
 - **Two-Key Workflow (`Tab` & `Enter`):**
-  - **Cyclic `Tab` on empty lines:** `Empty line` → `Character (@)` → `INT. ` → `EXT. ` → `Empty line`.
+  - **Cyclic `Tab` on empty lines:** `Empty line` → `Character (@)` → `Prefix 1 (e.g., INT.)` → `Prefix 2 (e.g., EXT.)` → `Prefix 3 (e.g., INT./EXT.)` → `Empty line` (prefixes adapt dynamically to your active language setting).
+  - **`Tab` on existing scene headings:** Cycles through `INT.` → `EXT.` → `INT./EXT.` right inside an already typed scene heading.
   - **`Tab` on filled blocks:** `Character` → `Parenthetical ()`, `Dialogue` → `Parenthetical ()`, `Action` → `Transition (> CUT TO:)`.
   - **Quick Dialogue `Enter` workflow:** Pressing `Enter` after a `Character` formats the name in uppercase and jumps to `Dialogue`. Pressing `Enter` after a `Dialogue` line automatically starts a new `Character` (`@`). Pressing `Enter` twice on an empty dialogue line exits back to `Action`.
+- **Multilingual Scene Markers (7 Languages):**
+  - Built-in dictionaries for **English (`en`)**, **French (`fr`)**, **Spanish (`es`)**, **Italian (`it`)**, **German (`de`)**, **Russian (`ru`)**, and **Ukrainian (`uk`)**.
+  - Use a single language (e.g., `ru`) or combine multiple languages at once (e.g., `en, ru` or `en, uk`) so older and newer scripts work side by side.
 - **Step-by-Step Smart Autocomplete:**
-  1. Scene prefixes (`INT.`, `EXT.`, `INT./EXT.`, `I/E.`, `EST.`).
-  2. Locations collected from the current script and project bible.
-  3. Time of day after ` - ` (`DAY`, `NIGHT`, `MORNING`, `EVENING`, `CONTINUOUS`, etc.).
+  1. Scene prefixes (`INT.`, `EXT.`, `ИНТ.`, `НАТ.`, `ІНТ.`, `INNEN`, `EST.`, etc.).
+  2. Locations collected from the active script, other `#fountain` notes in the notebook, and project bibles.
+  3. Time of day after ` - ` (`DAY`, `NIGHT`, `ДЕНЬ`, `НОЧЬ`, `JOUR`, `DÍA`, `GIORNO`, `TAG`, etc.).
   4. Character names when typing `@` or uppercase letters.
-- **Hybrid Project Dictionary (`#fountain-bible`):** Automatically gathers characters and locations from the active script, all other `#fountain` notes in the same notebook, and optional reference notes tagged with `fountain-bible`.
+- **Hybrid Project Dictionary (`#fountain-bible`):** Automatically gathers characters and locations from the active script, all other `#fountain` notes in the same notebook, and reference notes tagged with `fountain-bible`.
 - **Screenplay Side Panel:**
-  - Live page count and runtime estimation (`~1 page = 1 minute`).
-  - Interactive hierarchical **Outline** (Sections `#`, Scene Headings, and toggleable Synopses `=`) with click-to-scroll navigation.
+  - Sticky header with calibrated page count (`~1 page = 1 minute` matched to US Letter PDF output) and runtime estimation.
+  - Scrollable interactive **Outline** (Sections `#`, Scene Headings, and toggleable Synopses `=`) with click-to-scroll navigation.
   - **Characters** list (with dialogue line counts) and **Locations** index.
 - **US-Standard PDF & `.fountain` Export:**
   - Export via **Note → Export → Fountain Screenplay (PDF)** or **Fountain Screenplay (.fountain)**.
-  - Configurable title page (`Title`, `Credit`, `Author`, `Source`, `Draft date`, `Contact`), optional scene numbering, synopsis inclusion, and automatic saving of title metadata back to the note header.
+  - Configurable title page (`Title`, `Credit`, `Author`, `Source`, `Draft date`, `Contact`), optional left-margin scene numbering, synopsis inclusion, and automatic saving of title metadata back to the note header.
   - Uses US Letter format (`1.5"` left margin, `1"` top/right/bottom margins, `12pt` monospace font) with full **Cyrillic** and Latin support.
 
 ---
@@ -66,7 +70,7 @@ The compiled `.jpl` archive will be generated inside the `publish/` directory.
 ## Usage Guide
 
 1. **Switch to the Markdown Editor:** Make sure Joplin is in **Markdown editor mode** (`M↓` icon in the top-right corner of the editor), as CodeMirror plugins are active in Markdown mode.
-2. **Activate Screenplay Mode:** Click the **filmstrip icon** on the editor toolbar. The note will be tagged with `fountain`, and the screenplay side panel will appear.
+2. **Activate Screenplay Mode:** Click the **filmstrip icon** on the toolbar (or click **Enable Fountain Mode** in the right side panel). The note will be tagged with `fountain`, and the screenplay layout will activate immediately.
 3. **Create a Series / Project Bible (Optional):**
    Create a note in the same notebook, assign the tag `fountain-bible`, and list recurring characters and locations under `## Characters` and `## Locations`:
    ```markdown
@@ -90,7 +94,7 @@ The compiled `.jpl` archive will be generated inside the `publish/` directory.
 Go to **Options / Settings → Fountain Screenplay** to configure:
 - **Default Author:** Pre-fills the `Author` field in the PDF export dialog.
 - **Default Contact Info:** Pre-fills the `Contact` field in the PDF export dialog.
-- **Scene marker languages:** Comma-separated list of active marker locales (default: `en`).
+- **Scene marker languages:** Comma-separated list of active marker locales (`en`, `fr`, `es`, `it`, `de`, `ru`, `uk`). Example: `en` or `en, ru`.
 
 ---
 
