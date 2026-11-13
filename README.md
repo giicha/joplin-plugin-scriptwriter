@@ -5,11 +5,11 @@
   <i>This is a plugin for <a href="https://github.com/laurent22/joplin">Joplin</a>. Refer to <a href="https://github.com/laurent22/joplin/tree/dev/packages/app-cli/tests/support/plugins/toc/">joplin toc</a>.</i>
   </p>
   <p>
-    <img src="https://img.shields.io/github/issues/giicha/joplin-scriptwriter-plugin" />
-    <img src="https://img.shields.io/github/license/giicha/joplin-scriptwriter-plugin" />
+    <img src="https://img.shields.io/github/issues/giicha/joplin-plugin-scriptwriter" />
+    <img src="https://img.shields.io/github/license/giicha/joplin-plugin-scriptwriter" />
     <img src="https://img.shields.io/npm/v/joplin-plugin-scriptwriter?label=version" />
     <img src="https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.totalDownloads&url=https%3A%2F%2Fjoplin-plugin-downloads.vercel.app%2Fapi%3Fplugin%3Dcom.giicha.joplin-plugin-scriptwriter">
-    <img src="https://img.shields.io/github/downloads/giicha/joplin-scriptwriter-plugin/total?label=github%20downloads" />
+    <img src="https://img.shields.io/github/downloads/giicha/joplin-plugin-scriptwriter/total?label=github%20downloads" />
     <img src="https://img.shields.io/npm/dt/joplin-plugin-scriptwriter?label=npm%20downloads" />
   </p>
   <hr>
