@@ -32,7 +32,7 @@ export interface OutlineNode {
 export interface ScreenplayAnalysis {
   lines: ParsedLine[];
   metadata: Record<string, string>;
-  characters: Map<string, number>; // Имя -> кол-во реплик
+  characters: Map<string, number>; // Name -> dialogue count
   locations: Set<string>;
   outline: OutlineNode[];
   estimatedPages: number;
@@ -62,7 +62,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     const prevType: BlockType = i > 0 ? parsedLines[i - 1].type : 'empty';
     const nextLine = i + 1 < rawLines.length ? rawLines[i + 1].trim() : '';
 
-    // 1. Метаданные в начале документа (Title:, Author: и т.д.)
+    // 1. Metadata at the top of the document (Title:, Author:, etc.)
     if (inMetadata) {
       if (trimmed === '') {
         inMetadata = false;
@@ -81,7 +81,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       }
     }
 
-    // 2. Пустая строка (если она сразу под Персонажем или Ремаркой — даем ей отступ Реплики, чтобы курсор мигал в нужном месте)
+    // 2. Empty line (if directly below Character or Parenthetical, assign Dialogue indentation for cursor placement)
     if (trimmed === '') {
       if (prevType === 'character' || prevType === 'parenthetical') {
         parsedLines.push({ lineNumber: i + 1, text: line, type: 'dialogue' });
@@ -91,13 +91,13 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 3. Разрыв страницы
+    // 3. Page break
     if (trimmed === '===') {
       parsedLines.push({ lineNumber: i + 1, text: line, type: 'page_break' });
       continue;
     }
 
-    // 4. Секции (# Акт 1, ## Эпизод)
+    // 4. Sections (# Act 1, ## Sequence)
     const sectionMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
     if (sectionMatch) {
       const level = (sectionMatch.at(1) || '#').length;
@@ -107,7 +107,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 5. Синопсисы (= Краткое описание)
+    // 5. Synopses (= Short scene summary)
     if (trimmed.startsWith('=') && !trimmed.startsWith('==')) {
       const title = trimmed.replace(/^=\s*/, '');
       parsedLines.push({ lineNumber: i + 1, text: line, type: 'synopsis' });
@@ -115,13 +115,13 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 6. Центрированный текст (> ТЕКСТ <)
+    // 6. Centered text (> TEXT <)
     if (trimmed.startsWith('>') && trimmed.endsWith('<') && trimmed.length > 2) {
       parsedLines.push({ lineNumber: i + 1, text: line, type: 'centered' });
       continue;
     }
 
-    // 7. Заголовок сцены (INT. / EXT. или принудительный через точку .SCENE)
+    // 7. Scene heading (INT. / EXT. or forced via leading dot .SCENE)
     if (
       (prevType === 'empty' || prevType === 'section' || prevType === 'synopsis') &&
       (sceneRegex.test(trimmed) || (trimmed.startsWith('.') && !trimmed.startsWith('..')))
@@ -137,14 +137,14 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
         sceneNumber: sceneCounter,
       });
 
-      // Извлекаем локацию (без префикса и без времени суток после " - ")
+      // Extract location name (without prefix and time of day after " - ")
       const withoutPrefix = cleanHeading.replace(sceneRegex, '');
       const locName = (withoutPrefix.split(/\s+-\s+/).at(0) || '').trim().toUpperCase();
       if (locName) locations.add(locName);
       continue;
     }
 
-    // 8. Переход (CUT TO: или принудительный > FADE OUT)
+    // 8. Transition (CUT TO: or forced > FADE OUT)
     if (
       prevType === 'empty' &&
       nextLine === '' &&
@@ -155,7 +155,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 9. Ремарка (внутри диалогового блока)
+    // 9. Parenthetical (inside a dialogue block)
     if (
       (prevType === 'character' || prevType === 'dialogue' || prevType === 'parenthetical') &&
       trimmed.startsWith('(') &&
@@ -165,13 +165,13 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 10. Реплика (идет сразу после персонажа или ремарки)
+    // 10. Dialogue (immediately follows Character or Parenthetical)
     if (prevType === 'character' || prevType === 'parenthetical' || prevType === 'dialogue') {
       parsedLines.push({ lineNumber: i + 1, text: line, type: 'dialogue' });
       continue;
     }
 
-    // 11. Персонаж (верхний регистр или @ИМЯ, после пустой строки)
+    // 11. Character (all caps or @NAME, after an empty line)
     const isAllCaps =
       trimmed === trimmed.toUpperCase() &&
       /[A-ZА-ЯЁ]/.test(trimmed) &&
@@ -196,11 +196,11 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 12. Всё остальное — Описание действия (Action)
+    // 12. Everything else — Action
     parsedLines.push({ lineNumber: i + 1, text: line, type: 'action' });
   }
 
-  // Расчет хронометража: 1 страница сценария (~55 строк с учетом отступов и переносов) = 1 минута
+  // Runtime estimation: 1 screenplay page (~55 lines accounting for margins and wrapping) = 1 minute
   let virtualLines = 0;
   for (const p of parsedLines) {
     switch (p.type) {

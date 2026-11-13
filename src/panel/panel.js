@@ -16,7 +16,7 @@ function renderData(data) {
   const inactiveBanner = document.getElementById('f-inactive-banner');
   const activeContent = document.getElementById('f-active-content');
 
-  // Если DOM панели еще не смонтирован, отложим отрисовку на 50 мс
+  // If the panel DOM is not mounted yet, defer rendering by 50 ms
   if (!inactiveBanner || !activeContent) {
     setTimeout(() => renderData(data), 50);
     return;
@@ -35,9 +35,9 @@ function renderData(data) {
   const statPages = document.getElementById('f-stat-pages');
   const statTime = document.getElementById('f-stat-time');
   if (statPages) statPages.textContent = `~${data.estimatedPages}`;
-  if (statTime) statTime.textContent = `~${data.estimatedMinutes} мин`;
+  if (statTime) statTime.textContent = `~${data.estimatedMinutes} min`;
 
-  // 1. Структура (секции, сцены, синопсисы)
+  // 1. Outline (sections, scenes, synopses)
   const outlineList = document.getElementById('f-outline-list');
   if (outlineList) {
     outlineList.innerHTML = '';
@@ -45,7 +45,7 @@ function renderData(data) {
       (node) => !(node.type === 'synopsis' && !showSynopses)
     );
     if (items.length === 0) {
-      outlineList.innerHTML = '<li class="f-empty-msg">Сцены и секции (#) пока не добавлены</li>';
+      outlineList.innerHTML = '<li class="f-empty-msg">No scenes or sections (#) added yet</li>';
     } else {
       for (const node of items) {
         const li = document.createElement('li');
@@ -63,30 +63,30 @@ function renderData(data) {
     }
   }
 
-  // 2. Персонажи
+  // 2. Characters
   const charList = document.getElementById('f-characters-list');
   if (charList) {
     charList.innerHTML = '';
     const chars = data.characters || [];
     if (chars.length === 0) {
-      charList.innerHTML = '<li class="f-empty-msg">Персонажи пока не найдены</li>';
+      charList.innerHTML = '<li class="f-empty-msg">No characters found yet</li>';
     } else {
       for (const [name, count] of chars) {
         const li = document.createElement('li');
         li.className = 'f-entity-item';
-        li.innerHTML = `<span>${name}</span><span>${count} репл.</span>`;
+        li.innerHTML = `<span>${name}</span><span>${count} lines</span>`;
         charList.appendChild(li);
       }
     }
   }
 
-  // 3. Локации
+  // 3. Locations
   const locList = document.getElementById('f-locations-list');
   if (locList) {
     locList.innerHTML = '';
     const locs = data.locations || [];
     if (locs.length === 0) {
-      locList.innerHTML = '<li class="f-empty-msg">Локации пока не найдены</li>';
+      locList.innerHTML = '<li class="f-empty-msg">No locations found yet</li>';
     } else {
       for (const loc of locs) {
         const li = document.createElement('li');
@@ -98,7 +98,7 @@ function renderData(data) {
   }
 }
 
-// Единый обработчик кликов через делегирование (работает всегда, даже после перерисовки DOM)
+// Single click handler via event delegation (persists across DOM re-renders)
 document.addEventListener('click', (e) => {
   const target = e.target;
   if (!target) return;
@@ -137,5 +137,5 @@ webviewApi.onMessage((event) => {
   }
 });
 
-// Запрашиваем актуальное состояние сразу при загрузке панели
+// Request initial state immediately upon panel load
 webviewApi.postMessage({ type: 'ready' });

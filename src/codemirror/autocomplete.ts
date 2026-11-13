@@ -19,15 +19,15 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
     const prevLineText =
       line.number > 1 ? context.state.doc.line(line.number - 1).text.trim() : '';
 
-    // ШАГ 1: Подсказка префиксов сцены в начале новой строки (INT., EXT. и т.д.)
+    // STEP 1: Suggest scene prefixes at the start of a new line (INT., EXT., etc.)
     if (prevLineText === '' && /^[A-Za-zА-Яа-я./]{1,8}$/.test(textBefore) && !textBefore.startsWith('@')) {
       const prefixOptions = localeCfg.scenePrefixes.map((p) => ({
         label: p + ' ',
         type: 'keyword',
-        detail: 'Префикс сцены',
+        detail: 'Scene prefix',
       }));
 
-      // Если пользователь уже набрал заглавными 2+ буквы, также можем предложить персонажей
+      // If the user has already typed 2+ uppercase letters, also suggest characters
       const allChars = new Set<string>([
         ...docAnalysis.characters.keys(),
         ...extDict.characters,
@@ -37,7 +37,7 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
           ? Array.from(allChars).map((c) => ({
               label: c,
               type: 'variable',
-              detail: 'Персонаж',
+              detail: 'Character',
             }))
           : [];
 
@@ -48,7 +48,7 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
       };
     }
 
-    // ШАГ 2: После префикса (INT. ) и до дефиса ( - ) -> подсказка локаций
+    // STEP 2: After prefix (INT. ) and before hyphen ( - ) -> suggest locations
     const prefixList = localeCfg.scenePrefixes
       .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('|');
@@ -64,13 +64,13 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
         options: Array.from(allLocs).map((loc) => ({
           label: loc,
           type: 'class',
-          detail: 'Локация',
+          detail: 'Location',
         })),
         filter: true,
       };
     }
 
-    // ШАГ 3: После дефиса в заголовке сцены (INT. КВАРТИРА - ) -> подсказка времени суток
+    // STEP 3: After hyphen in scene heading (INT. APARTMENT - ) -> suggest time of day
     const todMatch = textBefore.match(new RegExp(`^(${prefixList})\\s+.+\\s+-\\s*(.*)$`, 'i'));
     if (todMatch) {
       const dashIndex = textBefore.lastIndexOf('-');
@@ -80,13 +80,13 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
         options: localeCfg.timeOfDay.map((t) => ({
           label: t,
           type: 'enum',
-          detail: 'Время суток',
+          detail: 'Time of day',
         })),
         filter: true,
       };
     }
 
-    // ШАГ 4: Ввод персонажа после '@'
+    // STEP 4: Character input after '@'
     if (textBefore.startsWith('@')) {
       const allChars = new Set<string>([
         ...docAnalysis.characters.keys(),
@@ -97,7 +97,7 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
         options: Array.from(allChars).map((c) => ({
           label: c,
           type: 'variable',
-          detail: 'Персонаж',
+          detail: 'Character',
         })),
         filter: true,
       };

@@ -1,0 +1,36 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24' 
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Joplin Plugin
+        run: npm run dist
+
+      - name: Publish to NPM
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }} 
+
+      - name: Upload JPL to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: publish/*.jpl 
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}

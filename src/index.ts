@@ -136,21 +136,21 @@ joplin.plugins.register({
         type: SettingItemType.String,
         section: 'fountainArchitect',
         public: true,
-        label: 'Автор по умолчанию (для титульного листа PDF)',
+        label: 'Default Author (for PDF title page)',
       },
       defaultContact: {
         value: '',
         type: SettingItemType.String,
         section: 'fountainArchitect',
         public: true,
-        label: 'Контакты по умолчанию (для титульного листа PDF)',
+        label: 'Default Contact Info (for PDF title page)',
       },
       activeLocales: {
         value: 'en',
         type: SettingItemType.String,
         section: 'fountainArchitect',
         public: true,
-        label: 'Языки маркеров сцен (через запятую, например: en)',
+        label: 'Scene marker languages (comma-separated, e.g., en)',
       },
     });
 
@@ -160,7 +160,7 @@ joplin.plugins.register({
       './codemirror/fountainPlugin.js'
     );
 
-        await joplin.contentScripts.onMessage('fountainCodeMirror', async (message: any) => {
+    await joplin.contentScripts.onMessage('fountainCodeMirror', async (message: any) => {
       if (message && message.type === 'requestState') {
         const note = await joplin.workspace.selectedNote();
         if (!note) return { enabled: false };
@@ -196,16 +196,15 @@ joplin.plugins.register({
         ? await collectNotebookDictionary(note.parent_id, note.id, locales)
         : { characters: [], locations: [], locales };
 
-      // Отправляем состояние в CodeMirror с небольшой задержкой,
-      // чтобы новый экземпляр редактора успел смонтироваться при смене заметки
-        try {
-          await joplin.commands.execute('editor.execCommand', {
-            name: 'fountain:setState',
-            args: [{ enabled, dictionary }],
-          });
-        } catch (_e) {
-          // Игнорируем, если редактор в данный момент пересоздается
-        }
+      // Send state to CodeMirror so the editor instance updates on note switch
+      try {
+        await joplin.commands.execute('editor.execCommand', {
+          name: 'fountain:setState',
+          args: [{ enabled, dictionary }],
+        });
+      } catch (_e) {
+        // Ignore if editor is currently re-mounting
+      }
 
       if (enabled) {
         await joplin.views.panels.show(panel);
@@ -243,7 +242,7 @@ joplin.plugins.register({
 
     await joplin.commands.register({
       name: 'fountain.toggleMode',
-      label: 'Переключить режим сценария (Fountain)',
+      label: 'Toggle Screenplay Mode (Fountain)',
       iconName: 'fas fa-film',
       execute: toggleScreenplayMode,
     });
@@ -267,7 +266,7 @@ joplin.plugins.register({
       }
     });
 
-    // 6. Регистрация модуля экспорта в меню «Файл -> Экспорт -> Fountain PDF»
+    // 6. Register export module in menu "Note -> Export -> Fountain Screenplay (PDF)"
     await joplin.interop.registerExportModule({
       format: 'fountain_pdf',
       description: 'Fountain Screenplay (PDF)',
@@ -284,10 +283,10 @@ joplin.plugins.register({
 
         const defaultAuthor = (await joplin.settings.value('defaultAuthor')) as string;
         const defaultContact = (await joplin.settings.value('defaultContact')) as string;
-        const today = new Date().toLocaleDateString('ru-RU');
+        const today = new Date().toLocaleDateString('en-US');
 
         const title = analysis.metadata['title'] || item.title || 'UNTITLED';
-        const credit = analysis.metadata['credit'] || 'Автор сценария';
+        const credit = analysis.metadata['credit'] || 'Written by';
         const author = analysis.metadata['author'] || defaultAuthor || '';
         const source = analysis.metadata['source'] || '';
         const draftDate = analysis.metadata['draft date'] || today;
@@ -373,51 +372,51 @@ joplin.plugins.register({
             }
           </style>
           <div class="f-dlg">
-            <h3>Экспорт сценария в PDF</h3>
+            <h3>Export Screenplay to PDF</h3>
             <form name="exportForm">
               <div class="f-dlg-checks">
                 <label>
                   <input type="checkbox" name="printTitlePage" checked />
-                  <span>Печатать титульный лист</span>
+                  <span>Print title page</span>
                 </label>
                 <label>
                   <input type="checkbox" name="numberScenes" checked />
-                  <span>Нумеровать сцены по краям</span>
+                  <span>Number scenes</span>
                 </label>
                 <label>
                   <input type="checkbox" name="includeSynopses" />
-                  <span>Показывать синопсисы (=)</span>
+                  <span>Include synopses (=)</span>
                 </label>
                 <label>
                   <input type="checkbox" name="saveMetadataToNote" checked />
-                  <span>Сохранить титул в заметку</span>
+                  <span>Save title metadata to note</span>
                 </label>
               </div>
 
-              <div class="f-dlg-section-title">Титульный лист</div>
+              <div class="f-dlg-section-title">Title Page</div>
               <div class="f-dlg-fields">
                 <label class="f-dlg-field">
-                  <span>Название (Title)</span>
+                  <span>Title</span>
                   <input type="text" name="title" value="${title}" />
                 </label>
                 <label class="f-dlg-field">
-                  <span>Кредит (Credit)</span>
+                  <span>Credit</span>
                   <input type="text" name="credit" value="${credit}" />
                 </label>
                 <label class="f-dlg-field">
-                  <span>Автор (Author)</span>
+                  <span>Author</span>
                   <input type="text" name="author" value="${author}" />
                 </label>
                 <label class="f-dlg-field">
-                  <span>Источник (Source)</span>
+                  <span>Source</span>
                   <input type="text" name="source" value="${source}" />
                 </label>
                 <label class="f-dlg-field">
-                  <span>Дата драфта (Draft date)</span>
+                  <span>Draft date</span>
                   <input type="text" name="draftDate" value="${draftDate}" />
                 </label>
                 <label class="f-dlg-field">
-                  <span>Контакты (Contact)</span>
+                  <span>Contact</span>
                   <input type="text" name="contact" value="${contact}" />
                 </label>
               </div>
@@ -427,8 +426,8 @@ joplin.plugins.register({
         );
 
         await joplin.views.dialogs.setButtons(exportDialog, [
-          { id: 'ok', title: 'Экспортировать PDF' },
-          { id: 'cancel', title: 'Отмена' },
+          { id: 'ok', title: 'Export PDF' },
+          { id: 'cancel', title: 'Cancel' },
         ]);
 
         const result = await joplin.views.dialogs.open(exportDialog);
@@ -460,7 +459,7 @@ joplin.plugins.register({
       onClose: async () => {},
     });
 
-    // 7. Регистрация модуля экспорта в чистый .fountain файл
+    // 7. Register export module for plain .fountain files
     await joplin.interop.registerExportModule({
       format: 'fountain',
       description: 'Fountain Screenplay (.fountain)',
@@ -469,12 +468,12 @@ joplin.plugins.register({
       fileExtensions: ['fountain'],
       onInit: async () => {},
       onProcessItem: async (_context: any, itemType: number, item: any) => {
-        if (itemType !== 1) return; // Только заметки
+        if (itemType !== 1) return; // Notes only
 
         const outputPath = _context.destPath;
         if (!outputPath) return;
 
-        // Сохраняем текст заметки в UTF-8 с расширением .fountain
+        // Save note text in UTF-8 with .fountain extension
         fs.writeFileSync(outputPath, item.body || '', 'utf8');
       },
       onProcessResource: async () => {},

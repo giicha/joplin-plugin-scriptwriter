@@ -24,8 +24,8 @@ export const fountainKeymap: KeyBinding[] = [
       const currentType = getCurrentLineType(docText, line.number);
       const trimmed = line.text.trim();
 
-      // 1. Циклическое переключение на пустой строке:
-      // Пустая строка -> Персонаж (@) -> Локация (INT. ) -> (EXT. ) -> Пустая строка
+      // 1. Cyclic switching on an empty line:
+      // Empty line -> Character (@) -> Scene Heading (INT. ) -> (EXT. ) -> Empty line
       if (trimmed === '') {
         const prevLine = line.number > 1 ? state.doc.line(line.number - 1) : null;
         const prefix = prevLine && prevLine.text.trim() !== '' ? '\n@' : '@';
@@ -62,7 +62,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 2. Из заполненного Персонажа -> Ремарка ()
+      // 2. From filled Character -> Parenthetical ()
       if (currentType === 'character' || trimmed.startsWith('@')) {
         const cleanChar = trimmed.replace(/^@/, '').toUpperCase();
         const insertText = `${cleanChar}\n()`;
@@ -73,7 +73,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 3. Из заполненного Действия -> Переход (CUT TO:)
+      // 3. From filled Action -> Transition (CUT TO:)
       if (currentType === 'action') {
         const transitionText = trimmed.startsWith('>')
           ? trimmed.replace(/^>\s*/, '')
@@ -85,7 +85,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 3. Из Реплики -> Ремарка (добавляем ремарку следующей строкой)
+      // 4. From Dialogue -> Parenthetical (add parenthetical on the next line)
       if (currentType === 'dialogue') {
         const insertText = `${line.text}\n()`;
         view.dispatch({
@@ -95,7 +95,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 4. Из Перехода -> обратно в Действие
+      // 5. From Transition -> back to Action
       if (currentType === 'transition') {
         const cleanAction = trimmed.replace(/^>\s*/, '');
         view.dispatch({
@@ -122,7 +122,7 @@ export const fountainKeymap: KeyBinding[] = [
       const currentType = getCurrentLineType(docText, line.number);
       const trimmed = line.text.trim();
 
-      // 1. Заголовок сцены -> Перевод в верхний регистр + пустая строка + Действие
+      // 1. Scene Heading -> Convert to uppercase + empty line + Action
       if (currentType === 'scene_heading') {
         const upper = trimmed.toUpperCase();
         const insertText = `${upper}\n\n`;
@@ -133,7 +133,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 2. Персонаж (включая ввод с префиксом '@') -> Убираем '@', делаем КАПС и переходим в Реплику
+      // 2. Character (including input with '@' prefix) -> Remove '@', uppercase, and move to Dialogue
       if (currentType === 'character' || trimmed.startsWith('@')) {
         const cleanChar = trimmed.replace(/^@/, '').toUpperCase();
         const insertText = `${cleanChar}\n`;
@@ -144,7 +144,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 3. Ремарка -> Выходим из скобок на новую строку в Реплику
+      // 3. Parenthetical -> Exit parentheses onto a new line in Dialogue
       if (currentType === 'parenthetical') {
         const insertText = `\n`;
         view.dispatch({
@@ -154,12 +154,12 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      // 4. Режим «быстрого диалога» после Реплики:
-      // - Если строка реплики пустая (двойной Enter) -> выход в Действие
-      // - Если строка реплики заполнена -> создаем нового Персонажа (пустая строка + '@')
+      // 4. "Quick dialogue" mode after Dialogue:
+      // - If dialogue line is empty (double Enter) -> exit to Action
+      // - If dialogue line has text -> create a new Character (empty line + '@')
       if (currentType === 'dialogue') {
         if (trimmed === '') {
-          // Выход в действие
+          // Exit to Action
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: '\n' },
             selection: EditorSelection.cursor(line.from + 1),
@@ -175,7 +175,7 @@ export const fountainKeymap: KeyBinding[] = [
         }
       }
 
-      // 5. Переход -> Пустая строка + новый блок
+      // 5. Transition -> Empty line + new block
       if (currentType === 'transition') {
         const insertText = `\n\n`;
         view.dispatch({
@@ -185,7 +185,7 @@ export const fountainKeymap: KeyBinding[] = [
         return true;
       }
 
-      return false; // Стандартный перенос строки для Действия и прочих блоков
+      return false; // Standard line break for Action and other blocks
     },
   },
 ];

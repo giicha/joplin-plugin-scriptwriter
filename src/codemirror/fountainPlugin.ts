@@ -31,7 +31,7 @@ let externalDict: ExternalDictionary = {
   locales: ['en'],
 };
 
-// Специальный эффект для принудительного пересчета декораций при смене режима/заметки
+// Special effect to force recalculation of decorations when mode or note changes
 const refreshFountainEffect = StateEffect.define<boolean>();
 
 function buildDecorations(view: EditorView): DecorationSet {
