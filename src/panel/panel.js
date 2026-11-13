@@ -69,12 +69,23 @@ function renderData(data) {
     charList.innerHTML = '';
     const chars = data.characters || [];
     if (chars.length === 0) {
-      charList.innerHTML = '<li class="f-empty-msg">No characters found yet</li>';
+      const emptyLi = document.createElement('li');
+      emptyLi.className = 'f-empty-msg';
+      emptyLi.textContent = 'No characters found yet';
+      charList.appendChild(emptyLi);
     } else {
       for (const [name, count] of chars) {
         const li = document.createElement('li');
         li.className = 'f-entity-item';
-        li.innerHTML = `<span>${name}</span><span>${count} lines</span>`;
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = name;
+
+        const countSpan = document.createElement('span');
+        countSpan.textContent = `${count} lines`;
+
+        li.appendChild(nameSpan);
+        li.appendChild(countSpan);
         charList.appendChild(li);
       }
     }

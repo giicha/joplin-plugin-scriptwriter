@@ -81,7 +81,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       }
     }
 
-    // 2. Empty line (if directly below Character or Parenthetical, assign Dialogue indentation for cursor placement)
+    // 2. Empty line (keep dialogue indentation only right below Character or Parenthetical)
     if (trimmed === '') {
       if (prevType === 'character' || prevType === 'parenthetical') {
         parsedLines.push({ lineNumber: i + 1, text: line, type: 'dialogue' });
@@ -123,8 +123,10 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
 
     // 7. Scene heading (INT. / EXT. or forced via leading dot .SCENE)
     if (
-      (prevType === 'empty' || prevType === 'section' || prevType === 'synopsis') &&
-      (sceneRegex.test(trimmed) || (trimmed.startsWith('.') && !trimmed.startsWith('..')))
+      sceneRegex.test(trimmed) ||
+      ((prevType === 'empty' || prevType === 'section' || prevType === 'synopsis') &&
+        trimmed.startsWith('.') &&
+        !trimmed.startsWith('..'))
     ) {
       sceneCounter++;
       const cleanHeading = trimmed.startsWith('.') ? trimmed.slice(1).trim() : trimmed;
@@ -174,7 +176,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     // 11. Character (all caps or @NAME, after an empty line)
     const isAllCaps =
       trimmed === trimmed.toUpperCase() &&
-      /\p{Lu}/u.test(trimmed) &&
+      /\p{Lu}.*\p{Lu}/u.test(trimmed) &&
       !trimmed.endsWith(':') &&
       !trimmed.startsWith('>') &&
       !trimmed.startsWith('#');

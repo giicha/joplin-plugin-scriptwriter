@@ -6,6 +6,15 @@ import { generateScreenplayPdf, PdfExportOptions } from './pdfExporter';
 const FOUNTAIN_TAG = 'fountain';
 const BIBLE_TAG = 'fountain-bible';
 
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function getOrCreateTagId(tagTitle: string): Promise<string> {
   let page = 1;
   while (true) {
@@ -219,11 +228,34 @@ joplin.plugins.register({
 
     const exportDialog = await joplin.views.dialogs.create('fountainPdfExportDialog');
 
-    const syncCurrentNote = async () => {
+    // Cache active note state to avoid redundant API calls on every auto-save
+    let activeNoteId: string | null = null;
+    let isActiveNoteFountain = false;
+
+    const updateSidePanel = async (noteBody: string, locales: string[]) => {
+      const analysis = analyzeFountain(noteBody, locales);
+      await joplin.views.panels.postMessage(panel, {
+        type: 'update',
+        payload: {
+          enabled: true,
+          estimatedPages: analysis.estimatedPages,
+          estimatedMinutes: analysis.estimatedMinutes,
+          outline: analysis.outline,
+          characters: Array.from(analysis.characters.entries()),
+          locations: Array.from(analysis.locations),
+        },
+      });
+    };
+
+    // Full sync (called on note switch or mode toggle)
+    const syncFullNoteState = async () => {
       const note = await joplin.workspace.selectedNote();
       if (!note) return;
 
+      activeNoteId = note.id;
       const enabled = await noteHasTag(note.id, FOUNTAIN_TAG);
+      isActiveNoteFountain = enabled;
+
       const localesRaw = (await joplin.settings.value('activeLocales')) as string;
       const locales = localesRaw.split(',').map((s) => s.trim()).filter(Boolean);
 
@@ -243,21 +275,33 @@ joplin.plugins.register({
 
       if (enabled) {
         await joplin.views.panels.show(panel);
-        const analysis = analyzeFountain(note.body || '', locales);
-        await joplin.views.panels.postMessage(panel, {
-          type: 'update',
-          payload: {
-            enabled: true,
-            estimatedPages: analysis.estimatedPages,
-            estimatedMinutes: analysis.estimatedMinutes,
-            outline: analysis.outline,
-            characters: Array.from(analysis.characters.entries()),
-            locations: Array.from(analysis.locations),
-          },
-        });
+        await updateSidePanel(note.body || '', locales);
       } else {
         await joplin.views.panels.hide(panel);
       }
+    };
+
+    // Fast sync on text edit (skips querying notebook notes and tags)
+    const syncPanelOnEdit = async () => {
+      const note = await joplin.workspace.selectedNote();
+      if (!note) return;
+
+      if (note.id !== activeNoteId) {
+        await syncFullNoteState();
+        return;
+      }
+
+      const enabled = await noteHasTag(note.id, FOUNTAIN_TAG);
+      if (enabled !== isActiveNoteFountain) {
+        await syncFullNoteState();
+        return;
+      }
+
+      if (!enabled) return;
+
+      const localesRaw = (await joplin.settings.value('activeLocales')) as string;
+      const locales = localesRaw.split(',').map((s) => s.trim()).filter(Boolean);
+      await updateSidePanel(note.body || '', locales);
     };
 
     const toggleScreenplayMode = async () => {
@@ -272,7 +316,7 @@ joplin.plugins.register({
       } else {
         await joplin.data.post(['tags', tagId, 'notes'], null, { id: note.id });
       }
-      await syncCurrentNote();
+      await syncFullNoteState();
     };
 
     await joplin.commands.register({
@@ -290,7 +334,7 @@ joplin.plugins.register({
 
     await joplin.views.panels.onMessage(panel, async (message: any) => {
       if (message.type === 'ready') {
-        await syncCurrentNote();
+        await syncFullNoteState();
       } else if (message.type === 'toggleMode') {
         await toggleScreenplayMode();
       } else if (message.type === 'scrollToLine') {
@@ -320,12 +364,12 @@ joplin.plugins.register({
         const defaultContact = (await joplin.settings.value('defaultContact')) as string;
         const today = new Date().toLocaleDateString('en-US');
 
-        const title = analysis.metadata['title'] || item.title || 'UNTITLED';
-        const credit = analysis.metadata['credit'] || 'Written by';
-        const author = analysis.metadata['author'] || defaultAuthor || '';
-        const source = analysis.metadata['source'] || '';
-        const draftDate = analysis.metadata['draft date'] || today;
-        const contact = analysis.metadata['contact'] || defaultContact || '';
+        const title = escapeHtml(analysis.metadata['title'] || item.title || 'UNTITLED');
+        const credit = escapeHtml(analysis.metadata['credit'] || 'Written by');
+        const author = escapeHtml(analysis.metadata['author'] || defaultAuthor || '');
+        const source = escapeHtml(analysis.metadata['source'] || '');
+        const draftDate = escapeHtml(analysis.metadata['draft date'] || today);
+        const contact = escapeHtml(analysis.metadata['contact'] || defaultContact || '');
 
         await joplin.views.dialogs.setHtml(
           exportDialog,
@@ -515,8 +559,8 @@ joplin.plugins.register({
       onClose: async () => {},
     });
 
-    await joplin.workspace.onNoteSelectionChange(syncCurrentNote);
-    await joplin.workspace.onNoteChange(syncCurrentNote);
-    await syncCurrentNote();
+    await joplin.workspace.onNoteSelectionChange(syncFullNoteState);
+    await joplin.workspace.onNoteChange(syncPanelOnEdit);
+    await syncFullNoteState();
   },
 });

@@ -6,11 +6,12 @@ import {
   ViewUpdate,
   keymap,
 } from '@codemirror/view';
-import { Prec, RangeSetBuilder, StateEffect } from '@codemirror/state';
+import { Prec, RangeSetBuilder } from '@codemirror/state';
 import { autocompletion } from '@codemirror/autocomplete';
-import { analyzeFountain, BlockType } from '../fountainParser';
+import { BlockType } from '../fountainParser';
 import { createFountainKeymap } from './keymap';
-import { createFountainCompleter, ExternalDictionary } from './autocomplete';
+import { createFountainCompleter } from './autocomplete';
+import { fountainStateField, setFountainStateEffect } from './fountainState';
 
 const LINE_CLASSES: Partial<Record<BlockType, string>> = {
   scene_heading: 'cm-fountain-scene',
@@ -24,25 +25,15 @@ const LINE_CLASSES: Partial<Record<BlockType, string>> = {
   metadata: 'cm-fountain-metadata',
 };
 
-let isFountainEnabled = false;
-let externalDict: ExternalDictionary = {
-  characters: [],
-  locations: [],
-  locales: ['en'],
-};
-
-// Special effect to force recalculation of decorations when mode or note changes
-const refreshFountainEffect = StateEffect.define<boolean>();
-
 function buildDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
-  if (!isFountainEnabled) return builder.finish();
-
-  const text = view.state.doc.toString();
-  const analysis = analyzeFountain(text, externalDict.locales);
+  const { enabled, analysis, forcedDialogueLine } = view.state.field(fountainStateField);
+  if (!enabled) return builder.finish();
 
   for (const parsed of analysis.lines) {
-    const cssClass = LINE_CLASSES[parsed.type];
+    const effectiveType =
+      parsed.lineNumber === forcedDialogueLine ? 'dialogue' : parsed.type;
+    const cssClass = LINE_CLASSES[effectiveType];
     if (cssClass && parsed.lineNumber <= view.state.doc.lines) {
       const lineInfo = view.state.doc.line(parsed.lineNumber);
       builder.add(
@@ -65,15 +56,22 @@ const fountainViewPlugin = ViewPlugin.fromClass(
     }
     update(update: ViewUpdate) {
       this.syncRootClass(update.view);
-      const hasRefreshEffect = update.transactions.some((tr) =>
-        tr.effects.some((e) => e.is(refreshFountainEffect))
-      );
-      if (update.docChanged || update.viewportChanged || hasRefreshEffect) {
+      const prevFountain = update.startState.field(fountainStateField);
+      const currFountain = update.state.field(fountainStateField);
+
+      if (
+        update.viewportChanged ||
+        prevFountain.analysis !== currFountain.analysis ||
+        prevFountain.enabled !== currFountain.enabled ||
+        prevFountain.forcedDialogueLine !== currFountain.forcedDialogueLine
+      ) {
         this.decorations = buildDecorations(update.view);
       }
     }
+
     syncRootClass(view: EditorView) {
-      if (isFountainEnabled) {
+      const { enabled } = view.state.field(fountainStateField);
+      if (enabled) {
         view.dom.classList.add('cm-fountain-active');
       } else {
         view.dom.classList.remove('cm-fountain-active');
@@ -89,16 +87,13 @@ export default function (context: { contentScriptId: string; postMessage: (msg: 
   return {
     plugin: (editorControl: any) => {
       const applyState = (payload: any) => {
-        if (!payload) return;
-        isFountainEnabled = !!payload.enabled;
-        if (payload.dictionary) {
-          externalDict = payload.dictionary;
-        }
-        if (editorControl.editor) {
-          editorControl.editor.dispatch({
-            effects: refreshFountainEffect.of(isFountainEnabled),
-          });
-        }
+        if (!payload || !editorControl.editor) return;
+        editorControl.editor.dispatch({
+          effects: setFountainStateEffect.of({
+            enabled: !!payload.enabled,
+            dictionary: payload.dictionary,
+          }),
+        });
       };
 
       if (editorControl.registerCommand) {
@@ -120,19 +115,21 @@ export default function (context: { contentScriptId: string; postMessage: (msg: 
       }
 
       editorControl.addExtension([
+        fountainStateField,
         fountainViewPlugin,
         Prec.highest(
           keymap.of(
-            createFountainKeymap(() => externalDict).map((binding) => ({
+            createFountainKeymap().map((binding) => ({
               ...binding,
-              run: (view) => (isFountainEnabled ? binding.run!(view) : false),
+              run: (view) =>
+                view.state.field(fountainStateField).enabled ? binding.run!(view) : false,
             }))
           )
         ),
         autocompletion({
           override: [
             (ctx) =>
-              isFountainEnabled ? createFountainCompleter(() => externalDict)(ctx) : null,
+              ctx.state.field(fountainStateField).enabled ? createFountainCompleter(ctx) : null,
           ],
         }),
       ]);

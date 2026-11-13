@@ -1,17 +1,17 @@
 import { KeyBinding } from '@codemirror/view';
-import { EditorSelection } from '@codemirror/state';
-import { analyzeFountain, BlockType } from '../fountainParser';
+import { EditorSelection, EditorState } from '@codemirror/state';
+import { BlockType } from '../fountainParser';
 import { acceptCompletion, completionStatus } from '@codemirror/autocomplete';
 import { getActiveLocaleConfig } from '../locales';
-import { ExternalDictionary } from './autocomplete';
+import { fountainStateField, forceDialogueLineEffect } from './fountainState';
 
-function getCurrentLineType(docText: string, lineNumber: number, locales: string[]): BlockType {
-  const analysis = analyzeFountain(docText, locales);
+function getCurrentLineType(state: EditorState, lineNumber: number): BlockType {
+  const { analysis } = state.field(fountainStateField);
   const found = analysis.lines.find((l) => l.lineNumber === lineNumber);
   return found ? found.type : 'action';
 }
 
-export function createFountainKeymap(getExternalDict: () => ExternalDictionary): KeyBinding[] {
+export function createFountainKeymap(): KeyBinding[] {
   return [
     {
       key: 'Tab',
@@ -23,12 +23,11 @@ export function createFountainKeymap(getExternalDict: () => ExternalDictionary):
         const state = view.state;
         const pos = state.selection.main.head;
         const line = state.doc.lineAt(pos);
-        const docText = state.doc.toString();
-        const extDict = getExternalDict();
+        const { dictionary: extDict } = state.field(fountainStateField);
         const locales = extDict.locales || ['en'];
         const localeCfg = getActiveLocaleConfig(locales);
 
-        const currentType = getCurrentLineType(docText, line.number, locales);
+        const currentType = getCurrentLineType(state, line.number);
         const trimmed = line.text.trim();
 
         // Prefixes for cyclic switching (first 3 from active locale, e.g., INT., EXT., INT./EXT.)
@@ -153,9 +152,7 @@ export function createFountainKeymap(getExternalDict: () => ExternalDictionary):
         const state = view.state;
         const pos = state.selection.main.head;
         const line = state.doc.lineAt(pos);
-        const docText = state.doc.toString();
-        const locales = getExternalDict().locales || ['en'];
-        const currentType = getCurrentLineType(docText, line.number, locales);
+        const currentType = getCurrentLineType(state, line.number);
         const trimmed = line.text.trim();
 
         // 1. Scene Heading -> Convert to uppercase + empty line + Action
@@ -192,12 +189,19 @@ export function createFountainKeymap(getExternalDict: () => ExternalDictionary):
 
         // 4. "Quick dialogue" mode after Dialogue:
         // - If dialogue line is empty (double Enter) -> exit to Action
-        // - If dialogue line has text -> create a new Character (empty line + '@')
+        // - If cursor is in the middle of the line -> split dialogue onto a new line
+        // - If cursor is at the end of a non-empty line -> create a new Character ('\n\n@')
         if (currentType === 'dialogue') {
           if (trimmed === '') {
             view.dispatch({
               changes: { from: line.from, to: line.to, insert: '\n' },
               selection: EditorSelection.cursor(line.from + 1),
+            });
+            return true;
+          } else if (pos < line.to) {
+            view.dispatch({
+              changes: { from: pos, to: pos, insert: '\n' },
+              selection: EditorSelection.cursor(pos + 1),
             });
             return true;
           } else {
@@ -216,6 +220,27 @@ export function createFountainKeymap(getExternalDict: () => ExternalDictionary):
           view.dispatch({
             changes: { from: line.to, to: line.to, insert: insertText },
             selection: EditorSelection.cursor(line.to + 2),
+          });
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      key: 'Shift-Enter',
+      run: (view) => {
+        const state = view.state;
+        const pos = state.selection.main.head;
+        const line = state.doc.lineAt(pos);
+        const currentType = getCurrentLineType(state, line.number);
+
+        // Inside Dialogue or Parenthetical, Shift+Enter inserts a plain line break within the same speech
+        if (currentType === 'dialogue' || currentType === 'parenthetical') {
+          view.dispatch({
+            changes: { from: pos, to: pos, insert: '\n' },
+            selection: EditorSelection.cursor(pos + 1),
+            effects: forceDialogueLineEffect.of(line.number + 1),
           });
           return true;
         }
