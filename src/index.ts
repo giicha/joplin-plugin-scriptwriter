@@ -185,7 +185,7 @@ joplin.plugins.register({
         type: SettingItemType.String,
         section: 'fountainArchitect',
         public: true,
-        label: 'Scene marker languages (comma-separated, e.g., en)',
+        label: 'Scene marker languages (comma-separated: en, fr, es, it, de, ru, uk)',
       },
     });
 

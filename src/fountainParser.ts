@@ -174,7 +174,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     // 11. Character (all caps or @NAME, after an empty line)
     const isAllCaps =
       trimmed === trimmed.toUpperCase() &&
-      /[A-ZА-ЯЁ]/.test(trimmed) &&
+      /\p{Lu}/u.test(trimmed) &&
       !trimmed.endsWith(':') &&
       !trimmed.startsWith('>') &&
       !trimmed.startsWith('#');
@@ -200,39 +200,39 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     parsedLines.push({ lineNumber: i + 1, text: line, type: 'action' });
   }
 
-  // Runtime estimation: 1 screenplay page (~55 lines accounting for margins and wrapping) = 1 minute
+  // Runtime & page estimation calibrated to US Letter PDFKit layout (~45 lines per page)
   let virtualLines = 0;
   for (const p of parsedLines) {
     switch (p.type) {
       case 'scene_heading':
-        virtualLines += 2.5;
+        virtualLines += 2.6;
         break;
       case 'character':
-        virtualLines += 2;
+        virtualLines += 1.8;
         break;
       case 'dialogue':
-        virtualLines += Math.max(1, Math.ceil(p.text.length / 35));
+        virtualLines += Math.max(1, Math.ceil(p.text.length / 33)) + 0.25;
         break;
       case 'parenthetical':
-        virtualLines += Math.max(1, Math.ceil(p.text.length / 25));
+        virtualLines += Math.max(1, Math.ceil(p.text.length / 24));
         break;
       case 'action':
-        virtualLines += Math.max(1, Math.ceil(p.text.length / 60));
+        virtualLines += Math.max(1, Math.ceil(p.text.length / 58)) + 0.4;
         break;
       case 'transition':
-        virtualLines += 2;
+        virtualLines += 2.2;
         break;
       case 'empty':
-        virtualLines += 0.5;
+        virtualLines += 0.35;
         break;
       case 'page_break':
-        virtualLines += 55 - (virtualLines % 55);
+        virtualLines += 47.5 - (virtualLines % 47.5);
         break;
     }
   }
 
-  const estimatedPages = Math.max(1, Math.round((virtualLines / 55) * 10) / 10);
-  const estimatedMinutes = Math.max(1, Math.round(virtualLines / 55));
+  const estimatedPages = Math.max(1, Math.round((virtualLines / 47.5) * 10) / 10);
+  const estimatedMinutes = Math.max(1, Math.round(virtualLines / 47.5));
 
   return {
     lines: parsedLines,

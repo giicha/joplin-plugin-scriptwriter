@@ -20,7 +20,7 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
       line.number > 1 ? context.state.doc.line(line.number - 1).text.trim() : '';
 
     // STEP 1: Suggest scene prefixes at the start of a new line (INT., EXT., etc.)
-    if (prevLineText === '' && /^[A-Za-zА-Яа-я./]{1,8}$/.test(textBefore) && !textBefore.startsWith('@')) {
+    if (prevLineText === '' && /^[\p{L}./]{1,8}$/u.test(textBefore) && !textBefore.startsWith('@')) {
       const prefixOptions = localeCfg.scenePrefixes.map((p) => ({
         label: p + ' ',
         type: 'keyword',
@@ -48,17 +48,20 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
       };
     }
 
-    // STEP 2: After prefix (INT. ) and before hyphen ( - ) -> suggest locations
-    const prefixList = localeCfg.scenePrefixes
+    // STEP 2: After prefix (INT. / ИНТ. ) and before hyphen ( - ) -> suggest locations
+    const prefixList = [...localeCfg.scenePrefixes]
+      .sort((a, b) => b.length - a.length)
       .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('|');
+
     const locMatch = textBefore.match(new RegExp(`^(${prefixList})\\s+([^-]*)$`, 'i'));
     if (locMatch) {
       const allLocs = new Set<string>([
         ...docAnalysis.locations,
         ...extDict.locations,
       ]);
-      const fromPos = line.from + locMatch[1].length + 1;
+      const matchedPrefix = locMatch.at(1) || '';
+      const fromPos = line.from + matchedPrefix.length + 1;
       return {
         from: fromPos,
         options: Array.from(allLocs).map((loc) => ({
@@ -71,10 +74,15 @@ export function createFountainCompleter(getExternalDict: () => ExternalDictionar
     }
 
     // STEP 3: After hyphen in scene heading (INT. APARTMENT - ) -> suggest time of day
-    const todMatch = textBefore.match(new RegExp(`^(${prefixList})\\s+.+\\s+-\\s*(.*)$`, 'i'));
+    const todMatch = textBefore.match(
+      new RegExp(`^(?:(?:${prefixList})\\s+|\\.)[^-]+-\\s*(.*)$`, 'i')
+    );
     if (todMatch) {
       const dashIndex = textBefore.lastIndexOf('-');
-      const fromPos = line.from + dashIndex + 2;
+      const afterDash = textBefore.slice(dashIndex + 1);
+      const spacesAfterDash = (afterDash.match(/^\s*/) || [''])[0].length;
+      const fromPos = line.from + dashIndex + 1 + spacesAfterDash;
+
       return {
         from: fromPos,
         options: localeCfg.timeOfDay.map((t) => ({

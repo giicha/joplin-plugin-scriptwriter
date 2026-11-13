@@ -9,7 +9,7 @@ import {
 import { Prec, RangeSetBuilder, StateEffect } from '@codemirror/state';
 import { autocompletion } from '@codemirror/autocomplete';
 import { analyzeFountain, BlockType } from '../fountainParser';
-import { fountainKeymap } from './keymap';
+import { createFountainKeymap } from './keymap';
 import { createFountainCompleter, ExternalDictionary } from './autocomplete';
 
 const LINE_CLASSES: Partial<Record<BlockType, string>> = {
@@ -123,7 +123,7 @@ export default function (context: { contentScriptId: string; postMessage: (msg: 
         fountainViewPlugin,
         Prec.highest(
           keymap.of(
-            fountainKeymap.map((binding) => ({
+            createFountainKeymap(() => externalDict).map((binding) => ({
               ...binding,
               run: (view) => (isFountainEnabled ? binding.run!(view) : false),
             }))
