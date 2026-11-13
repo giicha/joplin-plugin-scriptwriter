@@ -24,10 +24,13 @@
 	],
 	"screenshots": [
 	    {
-			"src": "images/screenshot.png",
+			"src": "images/scriptwriter-screenshot.png",
 			"label": "Draft example"
 		}
 	],
 	"icons": {},
-	"promo_tile": {}
+	"promo_tile": {
+		"src": "images/scriptwriter-promo.png",
+		"label": "Scriptwriter Plugin"
+	}
 }

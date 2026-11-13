@@ -154,6 +154,34 @@ export function createFountainKeymap(): KeyBinding[] {
         const line = state.doc.lineAt(pos);
         const currentType = getCurrentLineType(state, line.number);
         const trimmed = line.text.trim();
+        const textBeforeCursor = line.text.slice(0, pos - line.from);
+
+        // 0. Cursor at the very beginning of a non-empty line
+        if (trimmed !== '' && textBeforeCursor.trim() === '') {
+          if (currentType === 'character' || currentType === 'scene_heading') {
+            const prevLine = line.number > 1 ? state.doc.line(line.number - 1) : null;
+            const prevIsEmpty = !prevLine || prevLine.text.trim() === '';
+
+            if (line.number === 1) {
+              view.dispatch({
+                changes: { from: pos, to: pos, insert: '\n\n' },
+                selection: EditorSelection.cursor(pos),
+              });
+            } else if (prevIsEmpty) {
+              view.dispatch({
+                changes: { from: pos, to: pos, insert: '\n\n' },
+                selection: EditorSelection.cursor(pos + 1),
+              });
+            } else {
+              view.dispatch({
+                changes: { from: pos, to: pos, insert: '\n\n\n' },
+                selection: EditorSelection.cursor(pos + 1),
+              });
+            }
+            return true;
+          }
+          return false;
+        }
 
         // 1. Scene Heading -> Convert to uppercase + empty line + Action
         if (currentType === 'scene_heading') {
@@ -168,7 +196,10 @@ export function createFountainKeymap(): KeyBinding[] {
 
         // 2. Character (including input with '@' prefix) -> Remove '@', uppercase, and move to Dialogue
         if (currentType === 'character' || trimmed.startsWith('@')) {
-          const cleanChar = trimmed.replace(/^@/, '').toUpperCase();
+          const cleanChar = trimmed.replace(/^@/, '').trim().toUpperCase();
+          if (cleanChar === '') {
+            return false;
+          }
           const insertText = `${cleanChar}\n`;
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: insertText },
@@ -187,10 +218,7 @@ export function createFountainKeymap(): KeyBinding[] {
           return true;
         }
 
-        // 4. "Quick dialogue" mode after Dialogue:
-        // - If dialogue line is empty (double Enter) -> exit to Action
-        // - If cursor is in the middle of the line -> split dialogue onto a new line
-        // - If cursor is at the end of a non-empty line -> create a new Character ('\n\n@')
+        // 4. "Quick dialogue" mode after Dialogue
         if (currentType === 'dialogue') {
           if (trimmed === '') {
             view.dispatch({
@@ -227,7 +255,7 @@ export function createFountainKeymap(): KeyBinding[] {
         return false;
       },
     },
-    {
+        {
       key: 'Shift-Enter',
       run: (view) => {
         const state = view.state;
@@ -235,8 +263,16 @@ export function createFountainKeymap(): KeyBinding[] {
         const line = state.doc.lineAt(pos);
         const currentType = getCurrentLineType(state, line.number);
 
-        // Inside Dialogue or Parenthetical, Shift+Enter inserts a plain line break within the same speech
         if (currentType === 'dialogue' || currentType === 'parenthetical') {
+          if (line.text === '' && currentType === 'dialogue') {
+            view.dispatch({
+              changes: { from: pos, to: pos, insert: '  \n' },
+              selection: EditorSelection.cursor(pos + 3),
+              effects: forceDialogueLineEffect.of(line.number + 1),
+            });
+            return true;
+          }
+
           view.dispatch({
             changes: { from: pos, to: pos, insert: '\n' },
             selection: EditorSelection.cursor(pos + 1),

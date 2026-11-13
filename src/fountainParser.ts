@@ -106,32 +106,14 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       }
     }
 
-    // 2. Empty line (keep dialogue indentation right below Character/Parenthetical,
-    //    or between two non-empty lines of the same multi-line dialogue block)
+    // 2. Empty line:
+    // - Right below Character/Parenthetical -> keep 'dialogue' so cursor stays indented while typing
+    // - After Dialogue -> 'dialogue' ONLY if line has two spaces (Fountain spec), otherwise 'empty'
     if (trimmed === '') {
-      const nextIsAllCapsChar =
-        nextLine !== '' &&
-        nextLine === nextLine.toUpperCase() &&
-        /\p{Lu}.*\p{Lu}/u.test(nextLine) &&
-        !nextLine.endsWith(':') &&
-        !nextLine.startsWith('>') &&
-        !nextLine.startsWith('#');
-
-      const nextStartsNewBlock =
-        nextLine === '' ||
-        nextLine.startsWith('@') ||
-        nextLine.startsWith('#') ||
-        nextLine.startsWith('=') ||
-        nextLine.startsWith('!') ||
-        nextLine.startsWith('>') ||
-        nextLine.startsWith('.') ||
-        sceneRegex.test(nextLine) ||
-        nextIsAllCapsChar;
-
       if (
         prevType === 'character' ||
         prevType === 'parenthetical' ||
-        (prevType === 'dialogue' && !nextStartsNewBlock)
+        (prevType === 'dialogue' && line === '  ')
       ) {
         parsedLines.push({ lineNumber: i + 1, text: line, cleanText: '', type: 'dialogue' });
       } else {
