@@ -17,7 +17,7 @@
 
 A screenwriting plugin for **Joplin** built around the plain-text [Fountain](https://fountain.io) markup standard. Write scripts with industry-standard visual formatting, a two-key (`Tab` / `Enter`) workflow inspired by **KIT Scenarist** and **Story Architect (STARC)**, live runtime estimation, outline navigation, and US-standard PDF export.
 
-![Interface Preview](images/screenshot.png)
+![Interface Preview](images/scriptwriter-screenshot.png)
 
 ## Features
 
