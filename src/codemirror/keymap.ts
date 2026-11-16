@@ -96,7 +96,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         const state = view.state;
-        // STARC rule: do not switch styles when there is an active text selection
+        // SC rule: do not switch styles when there is an active text selection
         if (!state.selection.main.empty) {
           return false;
         }
@@ -120,7 +120,7 @@ export function createFountainKeymap(): KeyBinding[] {
         );
 
         // ---------------------------------------------------------------------
-        // A. EMPTY BLOCK (STARC styles-changing rules)
+        // A. EMPTY BLOCK (SC styles-changing rules)
         // ---------------------------------------------------------------------
         const isEmptyBlock =
           trimmed === '' || trimmed === '@' || trimmed === '>' || isBareScenePrefix;
@@ -179,7 +179,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         // ---------------------------------------------------------------------
-        // B. NON-EMPTY BLOCK (STARC styles-jumping rules)
+        // B. NON-EMPTY BLOCK (SC styles-jumping rules)
         // ---------------------------------------------------------------------
         // Allow Tab to exit Parenthetical from anywhere inside the parentheses (including before ')')
         if (currentType === 'parenthetical') {
@@ -192,7 +192,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         if (textBeforeCursor.trim() === '' || textAfterCursor.trim() !== '') {
-          // STARC rule: Tab at the beginning or middle of a non-empty line does nothing
+          // SC rule: Tab at the beginning or middle of a non-empty line does nothing
           return true;
         }
 
@@ -265,7 +265,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         const state = view.state;
-        // STARC rule: do not trigger block transitions when text is selected
+        // SC rule: do not trigger block transitions when text is selected
         if (!state.selection.main.empty) {
           return false;
         }
@@ -288,7 +288,7 @@ export function createFountainKeymap(): KeyBinding[] {
         );
 
         // ---------------------------------------------------------------------
-        // A. EMPTY BLOCK (STARC styles-changing rules)
+        // A. EMPTY BLOCK (SC styles-changing rules)
         // ---------------------------------------------------------------------
         const isEmptyBlock =
           trimmed === '' ||
@@ -368,7 +368,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         // ---------------------------------------------------------------------
-        // C. CURSOR IN THE MIDDLE OF A NON-EMPTY BLOCK (STARC rule: split into 2 blocks)
+        // C. CURSOR IN THE MIDDLE OF A NON-EMPTY BLOCK (SC rule: split into 2 blocks)
         // ---------------------------------------------------------------------
         if (textAfterCursor.trim() !== '') {
           const leftPart = textBeforeCursor.trimEnd();
@@ -418,7 +418,7 @@ export function createFountainKeymap(): KeyBinding[] {
         }
 
         // ---------------------------------------------------------------------
-        // D. CURSOR AT THE END OF A NON-EMPTY BLOCK (STARC styles-jumping rules)
+        // D. CURSOR AT THE END OF A NON-EMPTY BLOCK (SC styles-jumping rules)
         // ---------------------------------------------------------------------
 
         // 1. Scene Heading -> Action (\n\n)
