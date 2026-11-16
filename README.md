@@ -113,6 +113,7 @@ Go to **Options / Settings → Fountain Screenplay** to configure:
 - **Default Author:** Pre-fills the `Author` field in the PDF export dialog.
 - **Default Contact Info:** Pre-fills the `Contact` field in the PDF export dialog.
 - **Scene marker languages:** Comma-separated list of active marker locales (`en`, `fr`, `es`, `it`, `de`, `ru`, `uk`). Example: `en` or `en, ru`.
+- **Default PDF paper size:** US Letter or A4.
 
 ---
 
