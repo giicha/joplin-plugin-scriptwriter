@@ -391,6 +391,12 @@ joplin.plugins.register({
             * {
               box-sizing: border-box;
             }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              overflow-x: hidden;
+            }
             .f-dlg {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               width: 100%;
@@ -408,7 +414,7 @@ joplin.plugins.register({
               display: flex;
               flex-direction: column;
               gap: 8px;
-              margin-bottom: 14px;
+              margin: 12px 0 14px 0;
               font-size: 13px;
             }
             .f-dlg-checks label {
@@ -448,7 +454,8 @@ joplin.plugins.register({
             .f-dlg-field span {
               opacity: 0.85;
             }
-            .f-dlg-field input {
+            .f-dlg-field input,
+            .f-dlg-field select {
               width: 100%;
               min-width: 0;
               padding: 6px 8px;
@@ -458,7 +465,8 @@ joplin.plugins.register({
               color: var(--joplin-color, #222);
               font-size: 13px;
             }
-            .f-dlg-field input:focus {
+            .f-dlg-field input:focus,
+            .f-dlg-field select:focus {
               outline: none;
               border-color: #3182ce;
             }
@@ -466,13 +474,13 @@ joplin.plugins.register({
           <div class="f-dlg">
             <h3>Export Screenplay to PDF</h3>
             <form name="exportForm">
-              <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
-               <label style="font-weight: bold;">Paper Size:</label>
-                <select name="paperSize" style="width: 60%; padding: 4px;">
-                 <option value="LETTER" ${defaultPaperSize === 0 ? 'selected' : ''}>US Letter (8.5" × 11")</option>
-                 <option value="A4" ${defaultPaperSize === 1 ? 'selected' : ''}>A4 (210 × 297 mm)</option>
+              <label class="f-dlg-field">
+                <span>Paper Size</span>
+                <select name="paperSize">
+                  <option value="LETTER" ${defaultPaperSize === 0 ? 'selected' : ''}>US Letter (8.5" × 11")</option>
+                  <option value="A4" ${defaultPaperSize === 1 ? 'selected' : ''}>A4 (210 × 297 mm)</option>
                 </select>
-              </div>
+              </label>
               <div class="f-dlg-checks">
                 <label>
                   <input type="checkbox" name="printTitlePage" checked />
