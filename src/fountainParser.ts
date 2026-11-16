@@ -58,6 +58,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
 
   let inMetadata = true;
   let inBoneyard = false;
+  let inParenthetical = false;
   let sceneCounter = 0;
 
   const prefixPattern = localeCfg.scenePrefixes
@@ -107,12 +108,11 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     }
 
     // 2. Empty line:
-    // - Right below Character/Parenthetical -> keep 'dialogue' so cursor stays indented while typing
+    // - Right below Character/Parenthetical (when next line is empty) -> keep 'dialogue' so cursor stays indented while typing
     // - After Dialogue -> 'dialogue' ONLY if line has two spaces (Fountain spec), otherwise 'empty'
     if (trimmed === '') {
       if (
-        prevType === 'character' ||
-        prevType === 'parenthetical' ||
+        ((prevType === 'character' || prevType === 'parenthetical') && nextLine === '') ||
         (prevType === 'dialogue' && line === '  ')
       ) {
         parsedLines.push({ lineNumber: i + 1, text: line, cleanText: '', type: 'dialogue' });
@@ -228,12 +228,17 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 10. Parenthetical (inside a dialogue block)
+    // Reset multi-line parenthetical state if we exited a dialogue block
+    if (prevType !== 'character' && prevType !== 'dialogue' && prevType !== 'parenthetical') {
+      inParenthetical = false;
+    }
+
+    // 10. Parenthetical (single-line or multi-line inside a dialogue block)
     if (
       (prevType === 'character' || prevType === 'dialogue' || prevType === 'parenthetical') &&
-      withoutNotes.startsWith('(') &&
-      withoutNotes.endsWith(')')
+      (inParenthetical || withoutNotes.startsWith('('))
     ) {
+      inParenthetical = !withoutNotes.endsWith(')');
       parsedLines.push({
         lineNumber: i + 1,
         text: line,
@@ -283,7 +288,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
         .replace(/\s*\(.*?\)\s*$/, '')
         .trim()
         .toUpperCase();
-      if (cleanChar && !nameWithoutCaret.startsWith('@')) {
+      if (cleanChar) {
         characters.set(cleanChar, (characters.get(cleanChar) || 0) + 1);
       }
       continue;

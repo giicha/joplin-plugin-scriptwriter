@@ -12,6 +12,7 @@ export interface FountainEditorState {
   dictionary: ExternalDictionary;
   analysis: ScreenplayAnalysis;
   forcedDialogueLine: number | null;
+  suggestedCharacter: string | null;
 }
 
 const EMPTY_ANALYSIS: ScreenplayAnalysis = {
@@ -30,6 +31,7 @@ export const setFountainStateEffect = StateEffect.define<{
 }>();
 
 export const forceDialogueLineEffect = StateEffect.define<number | null>();
+export const setSuggestedCharacterEffect = StateEffect.define<string | null>();
 
 export const fountainStateField = StateField.define<FountainEditorState>({
   create(_state: EditorState): FountainEditorState {
@@ -38,16 +40,17 @@ export const fountainStateField = StateField.define<FountainEditorState>({
       dictionary: { characters: [], locations: [], locales: ['en'] },
       analysis: EMPTY_ANALYSIS,
       forcedDialogueLine: null,
+      suggestedCharacter: null,
     };
   },
 
   update(value: FountainEditorState, tr): FountainEditorState {
-    let { enabled, dictionary, analysis, forcedDialogueLine } = value;
+    let { enabled, dictionary, analysis, forcedDialogueLine, suggestedCharacter } = value;
     let shouldReanalyze = false;
 
-    // Reset temporary dialogue indentation on any document edit or cursor movement
     if (tr.docChanged || tr.selection) {
       forcedDialogueLine = null;
+      suggestedCharacter = null;
     }
 
     for (const effect of tr.effects) {
@@ -61,6 +64,9 @@ export const fountainStateField = StateField.define<FountainEditorState>({
       if (effect.is(forceDialogueLineEffect)) {
         forcedDialogueLine = effect.value;
       }
+      if (effect.is(setSuggestedCharacterEffect)) {
+        suggestedCharacter = effect.value;
+      }
     }
 
     if (tr.docChanged && enabled) {
@@ -73,6 +79,6 @@ export const fountainStateField = StateField.define<FountainEditorState>({
         : EMPTY_ANALYSIS;
     }
 
-    return { enabled, dictionary, analysis, forcedDialogueLine };
+    return { enabled, dictionary, analysis, forcedDialogueLine, suggestedCharacter };
   },
 });

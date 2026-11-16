@@ -7,7 +7,7 @@ import {
   keymap,
 } from '@codemirror/view';
 import { Prec, RangeSetBuilder } from '@codemirror/state';
-import { autocompletion } from '@codemirror/autocomplete';
+import { autocompletion, startCompletion } from '@codemirror/autocomplete';
 import { BlockType } from '../fountainParser';
 import { createFountainKeymap } from './keymap';
 import { createFountainCompleter } from './autocomplete';
@@ -96,6 +96,19 @@ const fountainViewPlugin = ViewPlugin.fromClass(
         prevFountain.forcedDialogueLine !== currFountain.forcedDialogueLine
       ) {
         this.decorations = buildDecorations(update.view);
+      }
+
+      // Open time-of-day autocomplete after user manually types " -" or " - " in a scene heading
+      if (update.docChanged && currFountain.enabled) {
+        const pos = update.state.selection.main.head;
+        const line = update.state.doc.lineAt(pos);
+        const lineInfo = currFountain.analysis.lines[line.number - 1];
+        if (lineInfo?.type === 'scene_heading') {
+          const textBefore = line.text.slice(0, pos - line.from);
+          if (/\s-\s?$/.test(textBefore)) {
+            setTimeout(() => startCompletion(update.view), 20);
+          }
+        }
       }
     }
 
