@@ -26,7 +26,7 @@ A screenwriting plugin for **Joplin** built around the plain-text [Fountain](htt
 - **Two-Key Workflow (`Tab`, `Enter`, & `Shift+Enter`):**
   - **Empty lines:**
     - Pressing `Tab` on an empty `Action` line starts a `Character` (`@`) and opens the character list. Pressing `Tab` again cycles: `Character (@)` → `Transition (> )` → `Action`.
-    - Pressing `Enter` on an empty `Action` line opens the **Scene Prefix** selector (`INT.`, `EXT.`, `ИНТ.`, `НАТ.`, etc.).
+    - Pressing `Enter` on an empty `Action` line opens the **Scene Prefix** selector (`INT.`, `EXT.`, etc.).
     - Pressing `Tab` on an empty `Dialogue` line inserts a `Parenthetical ()`; pressing `Enter` exits back to `Action`.
   - **Filled blocks (at line end):**
     - `Scene Heading`: `Tab` or `Enter` → new `Action` block.
