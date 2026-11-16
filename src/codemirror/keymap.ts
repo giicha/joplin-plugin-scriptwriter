@@ -30,6 +30,12 @@ function ensureBlankLineBefore(state: EditorState, lineNumber: number): string {
   return prevLine.text.trim() === '' ? '' : '\n';
 }
 
+function ensureBlankLineAfter(state: EditorState, lineNumber: number): string {
+  if (lineNumber >= state.doc.lines) return '';
+  const nextLine = state.doc.line(lineNumber + 1);
+  return nextLine.text.trim() === '' ? '' : '\n';
+}
+
 /**
  * Triggers CodeMirror autocomplete popup on the next animation frame
  * after fountainStateField re-analyzes the updated document.
@@ -162,10 +168,11 @@ export function createFountainKeymap(): KeyBinding[] {
 
           // 5. Empty Action -> Character (@) + open character autocomplete
           const leadingBreak = ensureBlankLineBefore(state, line.number);
-          const insertText = `${leadingBreak}@`;
+          const trailingBreak = ensureBlankLineAfter(state, line.number);
+          const insertText = `${leadingBreak}@${trailingBreak}`;
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: insertText },
-            selection: EditorSelection.cursor(line.from + insertText.length),
+            selection: EditorSelection.cursor(line.from + leadingBreak.length + 1),
           });
           triggerAutocomplete(view);
           return true;
@@ -318,13 +325,16 @@ export function createFountainKeymap(): KeyBinding[] {
             return true;
           }
 
-          // 4. Empty Action -> Scene Heading (INT. ) + open location autocomplete
+          // 4. Empty Action -> open Scene Prefix autocomplete (ИНТ., НАТ., etc.)
           const leadingBreak = ensureBlankLineBefore(state, line.number);
-          const insertText = `${leadingBreak}${firstPrefix} `;
-          view.dispatch({
-            changes: { from: line.from, to: line.to, insert: insertText },
-            selection: EditorSelection.cursor(line.from + insertText.length),
-          });
+          const trailingBreak = ensureBlankLineAfter(state, line.number);
+          const insertText = `${leadingBreak}${trailingBreak}`;
+          if (insertText !== '') {
+            view.dispatch({
+              changes: { from: line.from, to: line.to, insert: insertText },
+              selection: EditorSelection.cursor(line.from + leadingBreak.length),
+            });
+          }
           triggerAutocomplete(view);
           return true;
         }

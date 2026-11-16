@@ -167,6 +167,56 @@ export default function (context: { contentScriptId: string; postMessage: (msg: 
       editorControl.addExtension([
         fountainStateField,
         fountainViewPlugin,
+        EditorView.inputHandler.of((view, from, to, text) => {
+          const { enabled, analysis } = view.state.field(fountainStateField);
+          if (!enabled || !text || text.includes('\n')) return false;
+
+          const line = view.state.doc.lineAt(from);
+
+          // Case 1: Typing into a single empty separator line between two non-empty blocks
+          if (
+            from === to &&
+            line.text === '' &&
+            line.number > 1 &&
+            line.number < view.state.doc.lines
+          ) {
+            const prevLine = view.state.doc.line(line.number - 1);
+            const nextLine = view.state.doc.line(line.number + 1);
+            if (prevLine.text.trim() !== '' && nextLine.text.trim() !== '') {
+              const insert = `\n${text}\n`;
+              view.dispatch({
+                changes: { from, to, insert },
+                selection: { anchor: from + 1 + text.length },
+                userEvent: 'input.type',
+              });
+              return true;
+            }
+          }
+
+          // Case 2: Extending an existing Character name (outside parentheses) -> auto-uppercase
+          const lineInfo = analysis.lines[line.number - 1];
+          const textBeforeCursor = line.text.slice(0, from - line.from);
+          const isInsideParens =
+            textBeforeCursor.includes('(') && !textBeforeCursor.includes(')');
+
+          if (
+            (lineInfo?.type === 'character' || textBeforeCursor.trimStart().startsWith('@')) &&
+            !isInsideParens &&
+            !text.startsWith('(')
+          ) {
+            const upperText = text.toUpperCase();
+            if (upperText !== text) {
+              view.dispatch({
+                changes: { from, to, insert: upperText },
+                selection: { anchor: from + upperText.length },
+                userEvent: 'input.type',
+              });
+              return true;
+            }
+          }
+
+          return false;
+        }),
         Prec.highest(
           keymap.of(
             createFountainKeymap().map((binding) => ({

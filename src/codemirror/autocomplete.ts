@@ -69,28 +69,30 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
     new RegExp(`^(?:${prefixList})(?:\\s|$)`, 'i').test(trimmedBefore) ||
     trimmedBefore.startsWith('.');
 
-  // STEP 1: Suggest scene prefixes and uppercase characters at the start of a new block
+  // STEP 1: Suggest scene prefixes (and uppercase characters when typing) at the start of a new block
   if (
     prevLineText === '' &&
-    trimmedBefore.length >= 1 &&
+    (trimmedBefore.length >= 1 || context.explicit) &&
     !trimmedBefore.startsWith('@') &&
     !trimmedBefore.includes('(') &&
     !startsWithScenePrefix
   ) {
-    const isPrefixCandidate = /^[\p{L}./]{1,10}$/u.test(trimmedBefore);
+    const isPrefixCandidate =
+      trimmedBefore.length === 0 || /^[\p{L}./]{1,10}$/u.test(trimmedBefore);
+
     const prefixOptions: Completion[] = isPrefixCandidate
-      ? localeCfg.scenePrefixes.map((p) => ({
+      ? localeCfg.scenePrefixes.map((p, idx) => ({
           label: p + ' ',
           type: 'keyword',
           detail: 'Scene prefix',
-          boost: 1000,
+          boost: 1000 - idx,
           apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
             const insert = p + ' ';
             view.dispatch({
               changes: { from, to, insert },
               selection: { anchor: from + insert.length },
             });
-            requestAnimationFrame(() => startCompletion(view));
+            setTimeout(() => startCompletion(view), 20);
           },
         }))
       : [];
@@ -98,6 +100,7 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
     const orderedChars = getOrderedCharacters(docAnalysis, extDict.characters, line.number);
 
     const isUpperCharCandidate =
+      trimmedBefore.length >= 1 &&
       trimmedBefore === trimmedBefore.toUpperCase() &&
       /^[\p{L}\d\s.'-]{1,40}$/u.test(trimmedBefore);
 
@@ -107,6 +110,17 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
           type: 'variable',
           detail: index === 0 ? 'Next speaker' : 'Character',
           boost: 900 - index,
+          apply: (view: EditorView, _completion: Completion, from: number, to: number) => {
+            const currentLine = view.state.doc.lineAt(from);
+            const hasTextBelow =
+              currentLine.number < view.state.doc.lines &&
+              view.state.doc.line(currentLine.number + 1).text.trim() !== '';
+            const insert = hasTextBelow ? `${c}\n\n` : `${c}\n`;
+            view.dispatch({
+              changes: { from, to, insert },
+              selection: { anchor: from + c.length + 1 },
+            });
+          },
         }))
       : [];
 
@@ -235,9 +249,14 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
         detail: index === 0 ? 'Next speaker' : 'Character',
         boost: 900 - index,
         apply: (view: EditorView, _completion: Completion, _from: number, to: number) => {
+          const currentLine = view.state.doc.lineAt(replaceFrom);
+          const hasTextBelow =
+            currentLine.number < view.state.doc.lines &&
+            view.state.doc.line(currentLine.number + 1).text.trim() !== '';
+          const insert = hasTextBelow ? `${c}\n\n` : `${c}\n`;
           view.dispatch({
-            changes: { from: replaceFrom, to, insert: c },
-            selection: { anchor: replaceFrom + c.length },
+            changes: { from: replaceFrom, to, insert },
+            selection: { anchor: replaceFrom + c.length + 1 },
           });
         },
       })),
