@@ -40,7 +40,7 @@ A screenwriting plugin for **Joplin** built around the plain-text [Fountain](htt
 - **Multilingual Scene & Character Markers (7 Languages):**
   - Built-in dictionaries for **English (`en`)**, **French (`fr`)**, **Spanish (`es`)**, **Italian (`it`)**, **German (`de`)**, **Russian (`ru`)**, and **Ukrainian (`uk`)**.
   - Includes localized **Scene Prefixes**, **Time of Day** markers, **Transitions**, and **Character Extensions** (`(V.O.)`, `(O.S.)`, `(O.C.)`, `(SUBTITLE)`, `(CONT'D)`, etc.).
-  - Use a single language (e.g., `ru`) or combine multiple languages at once (e.g., `en, ru` or `en, uk`) so older and newer scripts work side by side.
+  - Use a single language (e.g., `en`) or combine multiple languages at once (e.g., `en, fr` or `es, it`) so older and newer scripts work side by side.
 - **Step-by-Step Smart Autocomplete:**
   1. **Scene Prefixes:** Triggered by `Enter` on an empty `Action` line or by typing at the start of a block (`INT.`, `EXT.`, `INNEN`, `EST.`, etc.). Selecting a prefix automatically opens location suggestions.
   2. **Locations:** Collected from the active script, other `#fountain` notes in the notebook, and project bibles.
