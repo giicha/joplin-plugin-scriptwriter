@@ -36,6 +36,7 @@ export interface ScreenplayAnalysis {
   lines: ParsedLine[];
   metadata: Record<string, string>;
   characters: Map<string, number>;
+  characterExtensions: Set<string>;
   locations: Map<string, number>;
   outline: OutlineNode[];
   estimatedPages: number;
@@ -53,6 +54,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
   const parsedLines: ParsedLine[] = [];
   const metadata: Record<string, string> = {};
   const characters = new Map<string, number>();
+  const characterExtensions = new Set<string>();
   const locations = new Map<string, number>();
   const outline: OutlineNode[] = [];
 
@@ -259,16 +261,18 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
       continue;
     }
 
-    // 12. Character (all caps with >= 2 letters or @NAME, optional dual dialogue '^')
+    // 12. Character (all caps with >= 1 letter or @NAME, optional extension '(...)' and dual dialogue '^')
     const hasDualCaret = /\s*\^\s*$/.test(withoutNotes);
     const nameWithoutCaret = withoutNotes.replace(/\s*\^\s*$/, '').trim();
+    const baseNameForCapsCheck = nameWithoutCaret.replace(/\s*\(.*$/, '').trim();
 
     const isAllCaps =
-      nameWithoutCaret === nameWithoutCaret.toUpperCase() &&
-      /\p{Lu}.*\p{Lu}/u.test(nameWithoutCaret) &&
-      !nameWithoutCaret.endsWith(':') &&
-      !nameWithoutCaret.startsWith('>') &&
-      !nameWithoutCaret.startsWith('#');
+      baseNameForCapsCheck.length > 0 &&
+      baseNameForCapsCheck === baseNameForCapsCheck.toUpperCase() &&
+      /\p{Lu}/u.test(baseNameForCapsCheck) &&
+      !baseNameForCapsCheck.endsWith(':') &&
+      !baseNameForCapsCheck.startsWith('>') &&
+      !baseNameForCapsCheck.startsWith('#');
 
     const hasNextLine = i + 1 < rawLines.length;
     if (
@@ -283,6 +287,11 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
         type: 'character',
         isDualDialogue: hasDualCaret,
       });
+
+      const extMatch = displayChar.match(/\(([^()]+)\)\s*$/);
+      if (extMatch && extMatch[1].trim()) {
+        characterExtensions.add(`(${extMatch[1].trim().toUpperCase()})`);
+      }
 
       const cleanChar = displayChar
         .replace(/\s*\(.*?\)\s*$/, '')
@@ -338,6 +347,7 @@ export function analyzeFountain(text: string, locales: string[] = ['en']): Scree
     lines: parsedLines,
     metadata,
     characters,
+    characterExtensions,
     locations,
     outline,
     estimatedPages,

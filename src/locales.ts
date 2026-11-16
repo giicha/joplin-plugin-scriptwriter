@@ -31,7 +31,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'SMASH CUT TO:',
       'MATCH CUT TO:',
     ],
-    characterExtensions: ['(V.O.)', '(O.S.)', '(O.C.)', "(CONT'D)"],
+    characterExtensions: ['(V.O.)', '(O.S.)', '(O.C.)', '(SUBTITLE)', "(CONT'D)"],
   },
 
   fr: {
@@ -54,7 +54,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'FONDU AU NOIR.',
       'OUVERTURE AU NOIR :',
     ],
-    characterExtensions: ['(V.O.)', '(H.C.)', '(OFF)', '(CONT.)'],
+    characterExtensions: ['(V.O.)', '(H.C.)', '(OFF)', '(SOUS-TITRE)', '(CONT.)'],
   },
 
   es: {
@@ -77,7 +77,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'FUNDE A NEGRO.',
       'ENCADENA A:',
     ],
-    characterExtensions: ['(V.O.)', '(F.C.)', '(OFF)', '(CONT.)'],
+    characterExtensions: ['(V.O.)', '(F.C.)', '(OFF)', '(SUBTÍTULO)', '(CONT.)'],
   },
 
   it: {
@@ -100,7 +100,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'DISSOLVENZA IN CHIUSURA.',
       'DISSOLVENZA INCROCIATA:',
     ],
-    characterExtensions: ['(V.O.)', '(F.C.)', '(OFF)', '(CONT.)'],
+    characterExtensions: ['(V.O.)', '(F.C.)', '(OFF)', '(SOTTOTITOLO)', '(CONT.)'],
   },
 
   de: {
@@ -123,7 +123,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'ABBLENDE.',
       'ÜBERBLENDE ZU:',
     ],
-    characterExtensions: ['(V.O.)', '(O.S.)', '(OFF)', '(FORTS.)'],
+    characterExtensions: ['(V.O.)', '(O.S.)', '(OFF)', '(UNTERTITEL)', '(FORTS.)'],
   },
 
   ru: {
@@ -147,7 +147,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'НАПЛЫВ:',
       'ПЕРЕХОД К:',
     ],
-    characterExtensions: ['(ЗК)', '(ГЗК)', '(ПРОД.)'],
+    characterExtensions: ['(ЗК)', '(ВПЗ)', '(О.С.)', '(СУБТИТР)', '(ПРОД.)'],
   },
 
   uk: {
@@ -171,7 +171,7 @@ export const SCREENPLAY_LOCALES: Record<string, LocaleConfig> = {
       'НАПЛИВ:',
       'ПЕРЕХІД ДО:',
     ],
-    characterExtensions: ['(ЗК)', '(ГЗК)', '(ПРОД.)'],
+    characterExtensions: ['(ЗК)', '(ВПЗ)', '(О.С.)', '(СУБТИТР)', '(ПРОД.)'],
   },
 };
 

@@ -74,6 +74,7 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
     prevLineText === '' &&
     trimmedBefore.length >= 1 &&
     !trimmedBefore.startsWith('@') &&
+    !trimmedBefore.includes('(') &&
     !startsWithScenePrefix
   ) {
     const isPrefixCandidate = /^[\p{L}./]{1,10}$/u.test(trimmedBefore);
@@ -98,7 +99,7 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
 
     const isUpperCharCandidate =
       trimmedBefore === trimmedBefore.toUpperCase() &&
-      /^[\p{L}\d\s.'()-]{1,40}$/u.test(trimmedBefore);
+      /^[\p{L}\d\s.'-]{1,40}$/u.test(trimmedBefore);
 
     const charOptions: Completion[] = isUpperCharCandidate
       ? orderedChars.map((c, index) => ({
@@ -115,7 +116,7 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
       return {
         from: line.from + leadingSpaces,
         options,
-        validFor: /^[\p{L}\d\s.'()-]*$/u,
+        validFor: /^[\p{L}\d\s.'-]*$/u,
         filter: true,
       };
     }
@@ -172,6 +173,48 @@ export function createFountainCompleter(context: CompletionContext): CompletionR
       validFor: leadingSpaces === 0 ? /^[^\s].*$/ : /^.*$/,
       filter: true,
     };
+  }
+
+  // STEP 3.5: Character extension in parentheses after character name: "ИВАН (" or "@ИВАН ("
+  const extMatch = trimmedBefore.match(/^@?([\p{L}\d\s.'-]+?)\s*\(([^()]*)$/u);
+  if (extMatch && prevLineText === '' && !startsWithScenePrefix) {
+    const rawCharName = extMatch[1].trim();
+    const isValidCharContext =
+      trimmedBefore.startsWith('@') ||
+      (rawCharName.length > 0 &&
+        rawCharName === rawCharName.toUpperCase() &&
+        /\p{Lu}/u.test(rawCharName));
+
+    if (isValidCharContext) {
+      const allExtensions = new Set<string>([
+        ...localeCfg.characterExtensions,
+        ...docAnalysis.characterExtensions,
+      ]);
+
+      const openParenIndex = textBefore.lastIndexOf('(');
+      const replaceFrom = line.from + openParenIndex;
+
+      return {
+        from: replaceFrom + 1,
+        options: Array.from(allExtensions).map((ext) => ({
+          label: ext,
+          filterText: ext.replace(/[()]/g, ''),
+          type: 'enum',
+          detail: 'Extension',
+          apply: (view: EditorView, _completion: Completion, _from: number, to: number) => {
+            // Consume auto-closed ')' right after cursor if present so we don't end up with "(ЗК))"
+            const charAfter = view.state.doc.sliceString(to, to + 1);
+            const replaceTo = charAfter === ')' ? to + 1 : to;
+            view.dispatch({
+              changes: { from: replaceFrom, to: replaceTo, insert: ext },
+              selection: { anchor: replaceFrom + ext.length },
+            });
+          },
+        })),
+        validFor: /^[^()]*$/,
+        filter: true,
+      };
+    }
   }
 
   // STEP 4: Character input after '@'

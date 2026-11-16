@@ -98,16 +98,23 @@ const fountainViewPlugin = ViewPlugin.fromClass(
         this.decorations = buildDecorations(update.view);
       }
 
-      // Open time-of-day autocomplete after user manually types " -" or " - " in a scene heading
+      // Open time-of-day or character-extension autocomplete automatically
       if (update.docChanged && currFountain.enabled) {
         const pos = update.state.selection.main.head;
         const line = update.state.doc.lineAt(pos);
         const lineInfo = currFountain.analysis.lines[line.number - 1];
-        if (lineInfo?.type === 'scene_heading') {
-          const textBefore = line.text.slice(0, pos - line.from);
-          if (/\s-\s?$/.test(textBefore)) {
-            setTimeout(() => startCompletion(update.view), 20);
-          }
+        const textBefore = line.text.slice(0, pos - line.from);
+        const trimmedBefore = textBefore.trimStart();
+
+        if (lineInfo?.type === 'scene_heading' && /\s-\s?$/.test(textBefore)) {
+          setTimeout(() => startCompletion(update.view), 20);
+        } else if (
+          /\($/.test(trimmedBefore) &&
+          (lineInfo?.type === 'character' ||
+            trimmedBefore.startsWith('@') ||
+            /^[\p{L}\d\s.'-]+\s*\($/u.test(trimmedBefore))
+        ) {
+          setTimeout(() => startCompletion(update.view), 20);
         }
       }
     }

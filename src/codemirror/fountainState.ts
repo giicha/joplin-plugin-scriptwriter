@@ -19,6 +19,7 @@ const EMPTY_ANALYSIS: ScreenplayAnalysis = {
   lines: [],
   metadata: {},
   characters: new Map(),
+  characterExtensions: new Set(),
   locations: new Map(),
   outline: [],
   estimatedPages: 1,
