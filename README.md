@@ -39,14 +39,14 @@ A screenwriting plugin for **Joplin** built around the plain-text [Fountain](htt
   - **Safe Separator Editing:** Typing or pressing `Tab`/`Enter` inside a single empty separator line between two existing blocks automatically preserves blank lines above and below so adjacent dialogues and characters never merge.
 - **Multilingual Scene & Character Markers (7 Languages):**
   - Built-in dictionaries for **English (`en`)**, **French (`fr`)**, **Spanish (`es`)**, **Italian (`it`)**, **German (`de`)**, **Russian (`ru`)**, and **Ukrainian (`uk`)**.
-  - Includes localized **Scene Prefixes**, **Time of Day** markers, **Transitions**, and **Character Extensions** (`(V.O.)`, `(O.S.)`, `(O.C.)`, `(SUBTITLE)`, `(CONT'D)`, `(ЗК)`, `(ВПЗ)`, `(О.С.)`, `(СУБТИТР)`, `(ПРОД.)`, etc.).
+  - Includes localized **Scene Prefixes**, **Time of Day** markers, **Transitions**, and **Character Extensions** (`(V.O.)`, `(O.S.)`, `(O.C.)`, `(SUBTITLE)`, `(CONT'D)`, etc.).
   - Use a single language (e.g., `ru`) or combine multiple languages at once (e.g., `en, ru` or `en, uk`) so older and newer scripts work side by side.
 - **Step-by-Step Smart Autocomplete:**
-  1. **Scene Prefixes:** Triggered by `Enter` on an empty `Action` line or by typing at the start of a block (`INT.`, `EXT.`, `ИНТ.`, `НАТ.`, `ІНТ.`, `INNEN`, `EST.`, etc.). Selecting a prefix automatically opens location suggestions.
+  1. **Scene Prefixes:** Triggered by `Enter` on an empty `Action` line or by typing at the start of a block (`INT.`, `EXT.`, `INNEN`, `EST.`, etc.). Selecting a prefix automatically opens location suggestions.
   2. **Locations:** Collected from the active script, other `#fountain` notes in the notebook, and project bibles.
-  3. **Time of Day:** Triggered automatically after typing ` - ` in any scene heading (`DAY`, `NIGHT`, `ДЕНЬ`, `НОЧЬ`, `ПОЗЖЕ`, `JOUR`, `DÍA`, `GIORNO`, `TAG`, etc.).
+  3. **Time of Day:** Triggered automatically after typing ` - ` in any scene heading (`DAY`, `NIGHT`, `JOUR`, `DÍA`, `GIORNO`, `TAG`, etc.).
   4. **Dialogue-Alternating Character Suggestions:** Triggered when typing `@` (via `Tab`) or uppercase letters. Characters are sorted by recency and dialogue alternation (the previous speaker appears **first**, followed by the last speaker, then earlier speakers in reverse chronological order). Confirming a character jumps directly to the `Dialogue` line.
-  5. **Character Extensions:** Typing `(` after any character name (e.g., `ALEX (` or `ИВАН (`) opens localized extensions (`(V.O.)`, `(O.S.)`, `(ЗК)`, `(ВПЗ)`, `(О.С.)`, `(СУБТИТР)`, `(ПРОД.)`) as well as any custom parenthetical extensions already used in your script.
+  5. **Character Extensions:** Typing `(` after any character name (e.g., `ALEX (` or `ИВАН (`) opens localized extensions (`(V.O.)`, `(O.S.)`, etc.) as well as any custom parenthetical extensions already used in your script.
 - **Hybrid Project Dictionary (`#fountain-bible`):** Automatically gathers characters and locations from the active script, all other `#fountain` notes in the same notebook, and reference notes tagged with `fountain-bible`.
 - **Screenplay Side Panel:**
   - Sticky header with calibrated page count (`~1 page = 1 minute` matched to US Letter PDF output) and runtime estimation.
